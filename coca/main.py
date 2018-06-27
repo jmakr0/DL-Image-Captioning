@@ -18,13 +18,13 @@ def main():
     im[:, :, 2] -= 123.68
 
     # Use pre-trained weights for Tensorflow backend
-    weights_path = '../../models/resnet512/resnet152_weights_tf.h5'
+    weights_path = '../models/resnet152/resnet152_weights_tf.h5'
 
     # Insert a new dimension for the batch_size
     im = np.expand_dims(im, axis=0)
 
     # Test pretrained model
-    model = ResNet152()(weights_path)
+    model = ResNet152(weights_path)
     sgd = SGD(lr=1e-2, decay=1e-6, momentum=0.9, nesterov=True)
     model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
     print(model.summary())
