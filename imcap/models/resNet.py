@@ -4,7 +4,7 @@ from keras.layers import Convolution2D, BatchNormalization, Activation, ZeroPadd
 from keras.layers import merge as Merge
 from keras.models import Model
 
-from imcap.layers.BNScale import BNScale
+from imcap.layers.bnScale import BNScale
 
 
 def identity_block(input_tensor, kernel_size, filters, bn_axis, stage, block):
