@@ -1,4 +1,4 @@
-import urllib.request
+import urllib
 import os
 
 
@@ -37,4 +37,4 @@ def _download_if_not_exist(url, file_path):
 
     else:
         print("downloading resnet-152 model weights to {}".format(file_path))
-        urllib.request.urlretrieve(url, file_path)
+        urllib.urlretrieve(url, file_path)

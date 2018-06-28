@@ -33,7 +33,7 @@ def image_model(args_dict, input_tensor):
     elif args_dict.cnn == 'resnet50':
         from keras.applications.resnet50 import ResNet50 as cnn
     elif args_dict.cnn == 'resnet152':
-        from imcap.models.resnet import ResNet152Embed as cnn
+        from resnet import ResNet152Embed as cnn
 
     base_model = cnn(weights='imagenet', include_top=False,
                      input_tensor=input_tensor, input_shape=input_shape)
@@ -219,4 +219,4 @@ if __name__ == "__main__":
     parser = get_parser()
     args_dict = parser.parse_args()
     model = get_model(args_dict)
-    print (model.summary())
+    print(model.summary())

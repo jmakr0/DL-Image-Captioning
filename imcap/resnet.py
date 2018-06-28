@@ -6,11 +6,11 @@ from keras.layers import Convolution2D, BatchNormalization, Activation, ZeroPadd
 from keras.layers import merge as Merge
 from keras.models import Model
 
-from imcap.layers.bnScale import BNScale
-from imcap.utils.downloader import download_ResNet152_weights_tf, download_ResNet152_weights_th
+from layers.bnScale import BNScale
+from utils.downloader import download_ResNet152_weights_tf, download_ResNet152_weights_th
 
 
-def identity_block(input_tensor, kernel_size, filters, bn_axis, stage, block):
+def _identity_block(input_tensor, kernel_size, filters, bn_axis, stage, block):
     """The identity_block is the block that has no conv layer at shortcut
 
     Adopted from https://gist.github.com/flyyufelix/7e2eafb149f72f4d38dd661882c554a6
@@ -50,7 +50,7 @@ def identity_block(input_tensor, kernel_size, filters, bn_axis, stage, block):
     return x
 
 
-def conv_block(input_tensor, kernel_size, filters, bn_axis, stage, block, strides=(2, 2)):
+def _conv_block(input_tensor, kernel_size, filters, bn_axis, stage, block, strides=(2, 2)):
     """conv_block is the block that has a conv layer at shortcut
 
     Adopted from https://gist.github.com/flyyufelix/7e2eafb149f72f4d38dd661882c554a6
@@ -98,7 +98,7 @@ def conv_block(input_tensor, kernel_size, filters, bn_axis, stage, block, stride
     return x
 
 
-def resnet152_conv_layers(img_input, eps):
+def _resnet152_conv_layers(img_input, eps):
     """Creates the ResNet152 architecture without the fully connected layers at the end.
 
     Adopted from https://gist.github.com/flyyufelix/7e2eafb149f72f4d38dd661882c554a6
@@ -121,53 +121,53 @@ def resnet152_conv_layers(img_input, eps):
     x = Activation('relu', name='conv1_relu')(x)
     x = MaxPooling2D((3, 3), strides=(2, 2), name='pool1')(x)
 
-    x = conv_block(x, 3, [64, 64, 256], bn_axis, stage=2, block='a', strides=(1, 1))
-    x = identity_block(x, 3, [64, 64, 256], bn_axis, stage=2, block='b')
-    x = identity_block(x, 3, [64, 64, 256], bn_axis, stage=2, block='c')
+    x = _conv_block(x, 3, [64, 64, 256], bn_axis, stage=2, block='a', strides=(1, 1))
+    x = _identity_block(x, 3, [64, 64, 256], bn_axis, stage=2, block='b')
+    x = _identity_block(x, 3, [64, 64, 256], bn_axis, stage=2, block='c')
 
-    x = conv_block(x, 3, [128, 128, 512], bn_axis, stage=3, block='a')
+    x = _conv_block(x, 3, [128, 128, 512], bn_axis, stage=3, block='a')
     for i in range(1, 8):
-        x = identity_block(x, 3, [128, 128, 512], bn_axis, stage=3, block='b' + str(i))
+        x = _identity_block(x, 3, [128, 128, 512], bn_axis, stage=3, block='b' + str(i))
 
-    x = conv_block(x, 3, [256, 256, 1024], bn_axis, stage=4, block='a')
+    x = _conv_block(x, 3, [256, 256, 1024], bn_axis, stage=4, block='a')
     for i in range(1, 36):
-        x = identity_block(x, 3, [256, 256, 1024], bn_axis, stage=4, block='b' + str(i))
+        x = _identity_block(x, 3, [256, 256, 1024], bn_axis, stage=4, block='b' + str(i))
 
-    x = conv_block(x, 3, [512, 512, 2048], bn_axis, stage=5, block='a')
-    x = identity_block(x, 3, [512, 512, 2048], bn_axis, stage=5, block='b')
-    x = identity_block(x, 3, [512, 512, 2048], bn_axis, stage=5, block='c')
+    x = _conv_block(x, 3, [512, 512, 2048], bn_axis, stage=5, block='a')
+    x = _identity_block(x, 3, [512, 512, 2048], bn_axis, stage=5, block='b')
+    x = _identity_block(x, 3, [512, 512, 2048], bn_axis, stage=5, block='c')
 
     x = AveragePooling2D((7, 7), name='avg_pool')(x)
 
     return x
 
 
-class ResNet152(Model):
+def ResNet152(weights_path, eps=1.1e-5):
     """Initiates ResNet152 architecture
     # Arguments
             weights_path: path to pretrained weight file
             eps: fuzzy parameter for batch normalization
     """
 
-    def __init__(self, weights_path, eps=1.1e-5):
-        self.eps = eps
+    eps = eps
 
-        # Handle Dimension Ordering for different backends
-        if K.image_dim_ordering() == 'tf':
-            img_input = Input(shape=(224, 224, 3), name='data')
-        else:
-            img_input = Input(shape=(3, 224, 224), name='data')
+    # Handle Dimension Ordering for different backends
+    if K.image_dim_ordering() == 'tf':
+        img_input = Input(shape=(224, 224, 3), name='data')
+    else:
+        img_input = Input(shape=(3, 224, 224), name='data')
 
-        x = resnet152_conv_layers(img_input, self.eps)
-        x_fc = Flatten()(x)
-        x_fc = Dense(1000, activation='softmax', name='fc1000')(x_fc)
+    x = _resnet152_conv_layers(img_input, eps)
+    x_fc = Flatten()(x)
+    x_fc = Dense(1000, activation='softmax', name='fc1000')(x_fc)
 
-        super().__init__(img_input, x_fc, name='resnet152')
+    model = Model(img_input, x_fc, name='resnet152')
+    model.load_weights(weights_path)
 
-        self.load_weights(weights_path)
+    return model
 
 
-class ResNet152Finetune(Model):
+def ResNet152Finetune(weights_path, num_classes, eps=1.1e-5):
     """Initiates ResNet152 architecture
     # Arguments
             weights_path: path to pretrained weight file
@@ -175,35 +175,34 @@ class ResNet152Finetune(Model):
             eps: fuzzy parameter for batch normalization
     """
 
-    def __init__(self, weights_path, num_classes, eps=1.1e-5):
-        self.eps = eps
+    eps = eps
 
-        # Handle Dimension Ordering for different backends
-        if K.image_dim_ordering() == 'tf':
-            img_input = Input(shape=(224, 224, 3), name='data')
-        else:
-            img_input = Input(shape=(3, 224, 224), name='data')
+    # Handle Dimension Ordering for different backends
+    if K.image_dim_ordering() == 'tf':
+        img_input = Input(shape=(224, 224, 3), name='data')
+    else:
+        img_input = Input(shape=(3, 224, 224), name='data')
 
-        x = resnet152_conv_layers(img_input, self.eps)
-        x_fc = Flatten()(x)
-        x_fc = Dense(1000, activation='softmax', name='fc1000')(x_fc)
+    x = _resnet152_conv_layers(img_input, eps)
+    x_fc = Flatten()(x)
+    x_fc = Dense(1000, activation='softmax', name='fc1000')(x_fc)
 
-        model = Model(img_input, x_fc)
+    model = Model(img_input, x_fc)
 
-        # load weights
-        if weights_path:
-            model.load_weights(weights_path, by_name=True)
+    # load weights
+    if weights_path:
+        model.load_weights(weights_path, by_name=True)
 
-        # Truncate and replace softmax layer for transfer learning
-        # Cannot use model.layers.pop() since model is not of Sequential() type
-        # The method below works since pre-trained weights are stored in layers but not in the model
-        x_newfc = Flatten()(x)
-        x_newfc = Dense(num_classes, activation='softmax', name='fc_new_{}'.format(num_classes))(x_newfc)
+    # Truncate and replace softmax layer for transfer learning
+    # Cannot use model.layers.pop() since model is not of Sequential() type
+    # The method below works since pre-trained weights are stored in layers but not in the model
+    x_newfc = Flatten()(x)
+    x_newfc = Dense(num_classes, activation='softmax', name='fc_new_{}'.format(num_classes))(x_newfc)
 
-        super().__init__(img_input, x_newfc, name='resnet152')
+    return Model(img_input, x_newfc, name='resnet152')
 
 
-def ResNet152Embed(self, include_top=True, weights='imagenet',
+def ResNet152Embed(include_top=True, weights='imagenet',
                    input_tensor=None, input_shape=None,
                    classes=1000):
 
@@ -216,7 +215,7 @@ def ResNet152Embed(self, include_top=True, weights='imagenet',
         raise ValueError('If using `weights` as imagenet with `include_top`'
                          ' as true, `classes` should be 1000')
 
-    self.eps = 1.1e-5
+    eps = 1.1e-5
 
     # Determine proper input shape
     input_shape = _obtain_input_shape(input_shape,
@@ -233,7 +232,7 @@ def ResNet152Embed(self, include_top=True, weights='imagenet',
         else:
             img_input = input_tensor
 
-    x = resnet152_conv_layers(img_input, self.eps)
+    x = _resnet152_conv_layers(img_input, eps)
     x_fc = Flatten()(x)
     x_fc = Dense(1000, activation='softmax', name='fc1000')(x_fc)
 
