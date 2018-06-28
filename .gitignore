@@ -103,5 +103,9 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# model files (would be too big to include in repo (~250mb))
+data/models
+
 # pyCharm
 .idea
+
