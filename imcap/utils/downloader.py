@@ -16,6 +16,7 @@ def download_ResNet152_weights_tf(data_dir=DEFAULT_DATA_DIR):
     file_path = os.path.join(data_dir, "models", "resnet", filename)
 
     _download_if_not_exist(tf_url, file_path)
+    return file_path
 
 
 def download_ResNet152_weights_th(data_dir=DEFAULT_DATA_DIR):
@@ -26,6 +27,7 @@ def download_ResNet152_weights_th(data_dir=DEFAULT_DATA_DIR):
     file_path = os.path.join(data_dir, "models", "resnet", filename)
 
     _download_if_not_exist(th_url, file_path)
+    return file_path
 
 
 def _download_if_not_exist(url, file_path):
