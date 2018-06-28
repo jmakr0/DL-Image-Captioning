@@ -14,34 +14,37 @@ import json
 from args import get_parser
 
 
-def image_model(args_dict,input_tensor):
-    '''
+def image_model(args_dict, input_tensor):
+    """
     Loads specified pretrained convnet
-    '''
+    """
+
     dim_ordering = K.image_dim_ordering()
-    assert dim_ordering in {'tf','th'}
+    assert dim_ordering in {'tf', 'th'}
 
-    input_shape = (args_dict.imsize,args_dict.imsize,3)
+    input_shape = (args_dict.imsize, args_dict.imsize, 3)
 
-    assert args_dict.cnn in {'vgg16','vgg19','resnet'}
+    assert args_dict.cnn in {'vgg16', 'vgg19', 'resnet50', 'resnet152'}
 
     if args_dict.cnn == 'vgg16':
         from keras.applications.vgg16 import VGG16 as cnn
     elif args_dict.cnn == 'vgg19':
         from keras.applications.vgg19 import VGG19 as cnn
-    elif args_dict.cnn == 'resnet':
+    elif args_dict.cnn == 'resnet50':
         from keras.applications.resnet50 import ResNet50 as cnn
+    elif args_dict.cnn == 'resnet152':
+        from imcap.models.resnet import ResNet152Embed as cnn
 
     base_model = cnn(weights='imagenet', include_top=False,
-                     input_tensor = input_tensor, input_shape = input_shape)
+                     input_tensor=input_tensor, input_shape=input_shape)
 
     if args_dict.lrmults:
         for layer in base_model.layers:
             layer.W_learning_rate_multiplier = args_dict.lrmult_conv
             layer.b_learning_rate_multiplier = args_dict.lrmult_conv
 
-    if args_dict.cnn == 'resnet':
-        model = Model(input=base_model.input,output=[base_model.layers[-2].output])
+    if args_dict.cnn == 'resnet50':
+        model = Model(input=base_model.input, output=[base_model.layers[-2].output])
     else:
         model = base_model
 

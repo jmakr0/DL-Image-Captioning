@@ -25,7 +25,7 @@ def get_parser():
 
     # model parts, inputs
     parser.add_argument('-cnn', dest='cnn',
-                        default = 'resnet', choices=['vgg16','vgg19','resnet'],
+                        default = 'resnet152', choices=['vgg16','vgg19','resnet152'],
                         help='Pretrained CNN to use')
     parser.add_argument('-imsize', dest='imsize',
                         default = 256, help='Image size',type=int)
