@@ -1,10 +1,13 @@
 from keras import backend as K
+from keras.applications.imagenet_utils import _obtain_input_shape
+from keras.engine.topology import get_source_inputs
 from keras.layers import Convolution2D, BatchNormalization, Activation, ZeroPadding2D, Input, MaxPooling2D, \
     AveragePooling2D, Flatten, Dense
 from keras.layers import merge as Merge
 from keras.models import Model
 
 from imcap.layers.bnScale import BNScale
+from imcap.utils.downloader import download_ResNet152_weights_tf, download_ResNet152_weights_th
 
 
 def identity_block(input_tensor, kernel_size, filters, bn_axis, stage, block):
@@ -95,24 +98,21 @@ def conv_block(input_tensor, kernel_size, filters, bn_axis, stage, block, stride
     return x
 
 
-def resnet152_conv_layers(eps):
+def resnet152_conv_layers(img_input, eps):
     """Creates the ResNet152 architecture without the fully connected layers at the end.
 
     Adopted from https://gist.github.com/flyyufelix/7e2eafb149f72f4d38dd661882c554a6
 
     # Arguments
-        weights_path: path to pretrained weight file
+        img_input: keras tensor as image input for the model
     # Returns
         A Keras model instance.
     """
 
-    # Handle Dimension Ordering for different backends
     if K.image_dim_ordering() == 'tf':
         bn_axis = 3
-        img_input = Input(shape=(224, 224, 3), name='data')
     else:
         bn_axis = 1
-        img_input = Input(shape=(3, 224, 224), name='data')
 
     x = ZeroPadding2D((3, 3), name='conv1_zeropadding')(img_input)
     x = Convolution2D(64, 7, 7, subsample=(2, 2), name='conv1', bias=False)(x)
@@ -137,7 +137,9 @@ def resnet152_conv_layers(eps):
     x = identity_block(x, 3, [512, 512, 2048], bn_axis, stage=5, block='b')
     x = identity_block(x, 3, [512, 512, 2048], bn_axis, stage=5, block='c')
 
-    return img_input, x
+    x = AveragePooling2D((7, 7), name='avg_pool')(x)
+
+    return x
 
 
 class ResNet152(Model):
@@ -150,12 +152,17 @@ class ResNet152(Model):
     def __init__(self, weights_path, eps=1.1e-5):
         self.eps = eps
 
-        img_input, x = resnet152_conv_layers(self.eps)
-        x_fc = AveragePooling2D((7, 7), name='avg_pool')(x)
-        x_fc = Flatten()(x_fc)
+        # Handle Dimension Ordering for different backends
+        if K.image_dim_ordering() == 'tf':
+            img_input = Input(shape=(224, 224, 3), name='data')
+        else:
+            img_input = Input(shape=(3, 224, 224), name='data')
+
+        x = resnet152_conv_layers(img_input, self.eps)
+        x_fc = Flatten()(x)
         x_fc = Dense(1000, activation='softmax', name='fc1000')(x_fc)
 
-        super().__init__(img_input, x_fc)
+        super().__init__(img_input, x_fc, name='resnet152')
 
         self.load_weights(weights_path)
 
@@ -171,9 +178,14 @@ class ResNet152Finetune(Model):
     def __init__(self, weights_path, num_classes, eps=1.1e-5):
         self.eps = eps
 
-        img_input, x = resnet152_conv_layers(self.eps)
-        x_fc = AveragePooling2D((7, 7), name='avg_pool')(x)
-        x_fc = Flatten()(x_fc)
+        # Handle Dimension Ordering for different backends
+        if K.image_dim_ordering() == 'tf':
+            img_input = Input(shape=(224, 224, 3), name='data')
+        else:
+            img_input = Input(shape=(3, 224, 224), name='data')
+
+        x = resnet152_conv_layers(img_input, self.eps)
+        x_fc = Flatten()(x)
         x_fc = Dense(1000, activation='softmax', name='fc1000')(x_fc)
 
         model = Model(img_input, x_fc)
@@ -185,8 +197,70 @@ class ResNet152Finetune(Model):
         # Truncate and replace softmax layer for transfer learning
         # Cannot use model.layers.pop() since model is not of Sequential() type
         # The method below works since pre-trained weights are stored in layers but not in the model
-        x_newfc = AveragePooling2D((7, 7), name='avg_pool')(x)
-        x_newfc = Flatten()(x_newfc)
+        x_newfc = Flatten()(x)
         x_newfc = Dense(num_classes, activation='softmax', name='fc_new_{}'.format(num_classes))(x_newfc)
 
-        super().__init__(img_input, x_newfc)
+        super().__init__(img_input, x_newfc, name='resnet152')
+
+
+def ResNet152Embed(self, include_top=True, weights='imagenet',
+                   input_tensor=None, input_shape=None,
+                   classes=1000):
+
+    if weights not in {'imagenet', None}:
+        raise ValueError('The `weights` argument should be either '
+                         '`None` (random initialization) or `imagenet` '
+                         '(pre-training on ImageNet).')
+
+    if weights == 'imagenet' and include_top and classes != 1000:
+        raise ValueError('If using `weights` as imagenet with `include_top`'
+                         ' as true, `classes` should be 1000')
+
+    self.eps = 1.1e-5
+
+    # Determine proper input shape
+    input_shape = _obtain_input_shape(input_shape,
+                                      default_size=224,
+                                      min_size=197,
+                                      dim_ordering=K.image_dim_ordering(),
+                                      include_top=include_top)
+
+    if input_tensor is None:
+        img_input = Input(shape=input_shape, name='data')
+    else:
+        if not K.is_keras_tensor(input_tensor):
+            img_input = Input(tensor=input_tensor, shape=input_shape)
+        else:
+            img_input = input_tensor
+
+    x = resnet152_conv_layers(img_input, self.eps)
+    x_fc = Flatten()(x)
+    x_fc = Dense(1000, activation='softmax', name='fc1000')(x_fc)
+
+    # Ensure that the model takes into account
+    # any potential predecessors of `input_tensor`.
+    if input_tensor is not None:
+        inputs = get_source_inputs(input_tensor)
+    else:
+        inputs = img_input
+
+    if weights == 'imagenet':
+        model = Model(inputs, x_fc)
+
+        # load weights
+        if K.image_dim_ordering() == 'th':
+            weights_path = download_ResNet152_weights_th()
+        else:
+            weights_path = download_ResNet152_weights_tf()
+
+        model.load_weights(weights_path, by_name=True)
+
+    if include_top:
+        # We only have weights for the whole model, so we have to drop layers if we want to exclude top.
+        # Cannot use model.layers.pop() since model is not of Sequential() type.
+        # The method below works since pre-trained weights are stored in layers but not in the model.
+        x_newfc = x_fc
+    else:
+        x_newfc = x
+
+    return Model(inputs, x_newfc, name='resnet152')
