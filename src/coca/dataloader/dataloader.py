@@ -145,6 +145,6 @@ class DataLoader(object):
                     # create list with word embeddings
                     embedded_caption = self.glove.embedd_string_sequence(caption)
 
-                    transformed_batch.append((image, caption))
+                    transformed_batch.append([image, embedded_caption])
 
                 yield transformed_batch
