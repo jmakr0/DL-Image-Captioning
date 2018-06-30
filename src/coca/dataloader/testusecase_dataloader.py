@@ -1,4 +1,4 @@
-from src.dataloader.dataloader import DataLoader
+from dataloader import DataLoader
 # =================================
 # This is an example of how to use the class dataloader
 # on the server

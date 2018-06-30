@@ -5,8 +5,8 @@ import threading
 
 import numpy as np
 
-from src.dataloader.glove import Glove
-from src.dataloader.image_loader import load_image
+from glove import Glove
+from image_loader import load_image
 
 
 class threadsafe_iter:

@@ -1,7 +1,7 @@
 import numpy as np
 from scipy import spatial
 
-from src.dataloader.settings import Settings
+from settings import Settings
 
 
 class Glove:
