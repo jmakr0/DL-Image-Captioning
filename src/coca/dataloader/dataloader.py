@@ -5,8 +5,8 @@ import threading
 
 import numpy as np
 
-from glove import Glove
-from image_loader import load_image
+from .glove import Glove
+from .image_loader import load_image
 
 
 class threadsafe_iter:
@@ -113,6 +113,12 @@ class DataLoader(object):
             result += transformed_meta
 
         return result
+
+    def get_dataset_size(self, partition):
+        metadata = self._load_metadata(partition)
+        metadata = self._transform_metadata(metadata)
+        return len(metadata)
+
 
     @threadsafe_generator
     def generator(self, partition, batch_size, train_flag=True):
