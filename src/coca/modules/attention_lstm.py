@@ -1,6 +1,7 @@
 from keras import Input, Model
 from keras.engine import InputSpec
-from keras.layers import LSTM, activations, initializers, K, TimeDistributed, Dense, GlobalAveragePooling2D
+from keras.layers import LSTM, activations, initializers, K, TimeDistributed, Dense, GlobalAveragePooling2D, \
+    RepeatVector
 
 
 class AttentionLSTM(LSTM):
@@ -314,8 +315,9 @@ if __name__ == '__main__':
 
     feature_vector = Input(shape=(14, 14, 512))
     feature_vector_flat = GlobalAveragePooling2D()(feature_vector)
+    feature_vector_flat = RepeatVector(25)(feature_vector_flat)
 
-    attn_lstm = AttentionLSTM(units=units)([feature_vector_flat, feature_vector_flat])
+    attn_lstm = AttentionLSTM(units=units)([feature_vector_flat, feature_vector])
 
     model = Model(inputs=feature_vector, outputs=attn_lstm)
     model.compile('adam', loss='kullback_leibler_divergence', metrics=['accuracy'])
