@@ -1,12 +1,12 @@
 from keras import backend as K
 from keras.applications.imagenet_utils import _obtain_input_shape
 from keras.engine.topology import get_source_inputs
-from keras.layers import Convolution2D, BatchNormalization, Activation, ZeroPadding2D, Input, MaxPooling2D, \
-    AveragePooling2D, Flatten, Dense, add
+from keras.layers import Conv2D, BatchNormalization, Activation, ZeroPadding2D, Input, MaxPooling2D, \
+    AveragePooling2D, Flatten, Dense, add, GlobalAveragePooling2D, GlobalMaxPooling2D
 from keras.models import Model
 
-from layers.bnScale import BNScale
-from utils.downloader import download_ResNet152_weights_tf, download_ResNet152_weights_th
+from .layers.bnScale import BNScale
+from .weights_downloader import download_ResNet152_weights_tf, download_ResNet152_weights_th
 
 
 def _identity_block(input_tensor, kernel_size, filters, bn_axis, stage, block):
@@ -26,19 +26,19 @@ def _identity_block(input_tensor, kernel_size, filters, bn_axis, stage, block):
     bn_name_base = 'bn' + str(stage) + block + '_branch'
     scale_name_base = 'scale' + str(stage) + block + '_branch'
 
-    x = Convolution2D(nb_filter1, 1, 1, name=conv_name_base + '2a', bias=False)(input_tensor)
+    x = Conv2D(nb_filter1, (1, 1), name=conv_name_base + '2a', use_bias=False)(input_tensor)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '2a')(x)
     x = BNScale(axis=bn_axis, name=scale_name_base + '2a')(x)
     x = Activation('relu', name=conv_name_base + '2a_relu')(x)
 
     x = ZeroPadding2D((1, 1), name=conv_name_base + '2b_zeropadding')(x)
-    x = Convolution2D(nb_filter2, kernel_size, kernel_size,
-                      name=conv_name_base + '2b', bias=False)(x)
+    x = Conv2D(nb_filter2, (kernel_size, kernel_size),
+                      name=conv_name_base + '2b', use_bias=False)(x)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '2b')(x)
     x = BNScale(axis=bn_axis, name=scale_name_base + '2b')(x)
     x = Activation('relu', name=conv_name_base + '2b_relu')(x)
 
-    x = Convolution2D(nb_filter3, 1, 1, name=conv_name_base + '2c', bias=False)(x)
+    x = Conv2D(nb_filter3, (1, 1), name=conv_name_base + '2c', use_bias=False)(x)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '2c')(x)
     x = BNScale(axis=bn_axis, name=scale_name_base + '2c')(x)
 
@@ -66,29 +66,29 @@ def _conv_block(input_tensor, kernel_size, filters, bn_axis, stage, block, strid
     bn_name_base = 'bn' + str(stage) + block + '_branch'
     scale_name_base = 'scale' + str(stage) + block + '_branch'
 
-    x = Convolution2D(nb_filter1, 1, 1, subsample=strides,
-                      name=conv_name_base + '2a', bias=False)(input_tensor)
+    x = Conv2D(nb_filter1, (1, 1), strides=strides,
+                      name=conv_name_base + '2a', use_bias=False)(input_tensor)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '2a')(x)
     x = BNScale(axis=bn_axis, name=scale_name_base + '2a')(x)
     x = Activation('relu', name=conv_name_base + '2a_relu')(x)
 
     x = ZeroPadding2D((1, 1), name=conv_name_base + '2b_zeropadding')(x)
-    x = Convolution2D(nb_filter2, kernel_size, kernel_size,
-                      name=conv_name_base + '2b', bias=False)(x)
+    x = Conv2D(nb_filter2, (kernel_size, kernel_size),
+                      name=conv_name_base + '2b', use_bias=False)(x)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '2b')(x)
     x = BNScale(axis=bn_axis, name=scale_name_base + '2b')(x)
     x = Activation('relu', name=conv_name_base + '2b_relu')(x)
 
-    x = Convolution2D(nb_filter3, 1, 1, name=conv_name_base + '2c', bias=False)(x)
+    x = Conv2D(nb_filter3, (1, 1), name=conv_name_base + '2c', use_bias=False)(x)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '2c')(x)
     x = BNScale(axis=bn_axis, name=scale_name_base + '2c')(x)
 
-    shortcut = Convolution2D(nb_filter3, 1, 1, subsample=strides,
-                             name=conv_name_base + '1', bias=False)(input_tensor)
+    shortcut = Conv2D(nb_filter3, (1, 1), strides=strides,
+                             name=conv_name_base + '1', use_bias=False)(input_tensor)
     shortcut = BatchNormalization(epsilon=eps, axis=bn_axis, name=bn_name_base + '1')(shortcut)
     shortcut = BNScale(axis=bn_axis, name=scale_name_base + '1')(shortcut)
 
-    x = add([x, shortcut], mode='sum', name='res' + str(stage) + block)
+    x = add([x, shortcut], name='res' + str(stage) + block)
     x = Activation('relu', name='res' + str(stage) + block + '_relu')(x)
     return x
 
@@ -102,13 +102,13 @@ def _resnet152_conv_layers(img_input, eps):
         A Keras model instance.
     """
 
-    if K.image_dim_ordering() == 'tf':
+    if K.image_data_format() == 'channels_last':
         bn_axis = 3
     else:
         bn_axis = 1
 
     x = ZeroPadding2D((3, 3), name='conv1_zeropadding')(img_input)
-    x = Convolution2D(64, 7, 7, subsample=(2, 2), name='conv1', bias=False)(x)
+    x = Conv2D(64, (7, 7), name="conv1", strides=(2, 2), use_bias=False)(x)
     x = BatchNormalization(epsilon=eps, axis=bn_axis, name='bn_conv1')(x)
     x = BNScale(axis=bn_axis, name='scale_conv1')(x)
     x = Activation('relu', name='conv1_relu')(x)
@@ -197,7 +197,7 @@ def ResNet152Finetune(weights_path, num_classes, eps=1.1e-5):
 
 def ResNet152Embed(include_top=True, weights='imagenet',
                    input_tensor=None, input_shape=None,
-                   classes=1000):
+                   pooling=None, classes=1000):
 
     if weights not in {'imagenet', None}:
         raise ValueError('The `weights` argument should be either '
@@ -214,8 +214,9 @@ def ResNet152Embed(include_top=True, weights='imagenet',
     input_shape = _obtain_input_shape(input_shape,
                                       default_size=224,
                                       min_size=197,
-                                      dim_ordering=K.image_dim_ordering(),
-                                      include_top=include_top)
+                                      data_format=K.image_data_format(),
+                                      require_flatten=include_top,
+                                      weights=weights)
 
     if input_tensor is None:
         img_input = Input(shape=input_shape, name='data')
@@ -240,7 +241,7 @@ def ResNet152Embed(include_top=True, weights='imagenet',
         model = Model(inputs, x_fc)
 
         # load weights
-        if K.image_dim_ordering() == 'th':
+        if K.backend() == 'theano':
             weights_path = download_ResNet152_weights_th()
         else:
             weights_path = download_ResNet152_weights_tf()
@@ -253,6 +254,11 @@ def ResNet152Embed(include_top=True, weights='imagenet',
         # The method below works since pre-trained weights are stored in layers but not in the model.
         x_newfc = x_fc
     else:
-        x_newfc = x
+        if pooling == 'avg':
+            x_newfc = GlobalAveragePooling2D()(x)
+        elif pooling == 'max':
+            x_newfc = GlobalMaxPooling2D()(x)
+        else:
+            x_newfc = x
 
     return Model(inputs, x_newfc, name='resnet152')
