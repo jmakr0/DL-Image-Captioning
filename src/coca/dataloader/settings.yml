@@ -1,0 +1,2 @@
+embeddings:
+  glove: '/home/cps8/data/glove.6B.50d.txt'
