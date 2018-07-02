@@ -5,8 +5,10 @@ from keras.utils import multi_gpu_model
 
 from modules.custom_lstm import CustomLSTM
 
+from src.coca.settings.settings import Settings
 
-def image_embedding(input_tensor, input_shape, cnn='resnet152'):
+
+def image_embedding(input_tensor, cnn='resnet152'):
     """
     Loads the specified convnet with pretrained weights.
     Currently does not support finetuning.
@@ -27,8 +29,7 @@ def image_embedding(input_tensor, input_shape, cnn='resnet152'):
     base_model = resnet(
         include_top=False,
         weights='imagenet',
-        input_tensor=input_tensor,
-        input_shape=input_shape
+        input_tensor=input_tensor
     )
 
     for layer in base_model.layers:
@@ -36,13 +37,17 @@ def image_embedding(input_tensor, input_shape, cnn='resnet152'):
 
     if cnn == 'resnet50':
         x = GlobalAveragePooling2D()(base_model.output)
-        # x = Flatten(name='im_flatten')(x)
     else:
         x = Flatten(name='im_flatten')(base_model.output)
+
     return x
 
 
-def language_model(input_tensor, max_caption_len, word_embedding_size):
+def language_model(input_tensor):
+    settings = Settings()
+    max_caption_len = settings.get_max_caption_length()
+    word_embedding_size = settings.get_word_embedding_size()
+
     x = RepeatVector(max_caption_len)(input_tensor)
     x = CustomLSTM(1024)(x)
     x = Dense(word_embedding_size)(x)
@@ -50,13 +55,14 @@ def language_model(input_tensor, max_caption_len, word_embedding_size):
     return x
 
 
-def create_model(max_caption_len, gpus=None):
-    img_shape = (224, 224, 3)
-    img_input = Input(shape=img_shape, name='img_input')
+def create_model(cnn, gpus=None):
+    settings = Settings()
+    img_shape = settings.get_image_dimensions()
+    max_caption_length = settings.get_max_caption_length()
 
-    # x = image_embedding(img_input, img_shape, cnn='resnet152')
-    x = image_embedding(img_input, img_shape, cnn='resnet50')
-    x = language_model(x, max_caption_len, 50)
+    img_input = Input(shape=img_shape, name='img_input')
+    img_embedding = image_embedding(img_input, cnn=cnn)
+    x = language_model(img_embedding)
 
     model = Model(input=img_input, output=x, name='img_cap')
     adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0., amsgrad=False)

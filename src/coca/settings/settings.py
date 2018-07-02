@@ -21,3 +21,6 @@ class Settings:
 
     def get_word_embedding_size(self):
         return int(self.config.get('word_embedding_size'))
+
+    def get_max_caption_length(self):
+        return int(self.config.get('max_caption_length'))
