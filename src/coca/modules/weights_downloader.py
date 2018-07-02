@@ -8,9 +8,7 @@ DEFAULT_DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pa
 
 
 def download_ResNet152_weights_tf(data_dir=DEFAULT_DATA_DIR):
-    tf_url = "https://doc-08-8g-docs.googleusercontent.com/docs/securesc/ctnhkpgoq04mmd8j7e1mca93ov7uclmi/" \
-             "dmrp7g1k2622cphural931g5vqmbm4tn/1530367200000/09552578107191760921/" \
-             "02683311644763403734/0Byy2AcGyEVxfeXExMzNNOHpEODg"
+    tf_url = "https://owncloud.hpi.de/index.php/s/sY9WxAf43XRHrjf/download"
     filename = "resnet152_weights_tf.h5"
     file_path = os.path.join(data_dir, "models", "resnet")
 
@@ -19,9 +17,8 @@ def download_ResNet152_weights_tf(data_dir=DEFAULT_DATA_DIR):
 
 
 def download_ResNet152_weights_th(data_dir=DEFAULT_DATA_DIR):
-    th_url = "https://doc-14-8g-docs.googleusercontent.com/docs/securesc/ctnhkpgoq04mmd8j7e1mca93ov7uclmi/" \
-            "j6srcrlctejmp5fhrlbmefrhsj5ldbbc/1530172800000/09552578107191760921/" \
-            "02683311644763403734/0Byy2AcGyEVxfZHhUT3lWVWxRN28?e=download"
+    raise NotImplementedError("this backend is currently not supported! Please add link to weights file and remove this error.")
+    th_url = "???"
     filename = "resnet152_weights_th.h5"
     file_path = os.path.join(data_dir, "models", "resnet")
 
