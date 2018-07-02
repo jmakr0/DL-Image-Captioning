@@ -9,7 +9,7 @@ from src.coca.model import create_model
 
 from src.common.callbacks import common_callbacks
 
-from src.coca.settings.settings import Settings
+from src.settings.settings import Settings
 
 
 def train(cnn, batch_size, epochs, devices=None):

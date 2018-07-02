@@ -8,7 +8,7 @@ import numpy as np
 from keras_preprocessing.image import load_img
 
 from src.settings.settings import Settings
-from .glove import Glove
+from src.common.dataloader.glove import Glove
 
 
 class ThreadsafeIterator:
