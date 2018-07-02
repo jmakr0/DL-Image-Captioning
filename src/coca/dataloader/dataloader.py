@@ -8,7 +8,6 @@ from keras_preprocessing.image import load_img
 
 from src.coca.settings.settings import Settings
 from .glove import Glove
-from .image_loader import load_image
 
 
 class threadsafe_iter:
@@ -115,7 +114,7 @@ class DataLoader(object):
             metadata = self.train_metadata
         elif partition == 'val':
             images_dir = self.validatoin_images_dir
-            metadata = self.val_metadata
+            metadata = self.validation_metadata
         else:
             raise ValueError
 
@@ -134,7 +133,7 @@ class DataLoader(object):
                 for i, (image_metadata, caption) in enumerate(batch):
                     image_path = os.path.join(images_dir, image_metadata['filename'])
 
-                    images[i] = load_image(image_path)
+                    images[i] = self._load_image(image_path)
                     captions[i] = self.glove.embed_text(caption, self.max_caption_length)
 
                 yield (images, captions)
