@@ -10,7 +10,7 @@ from src.coca.settings.settings import Settings
 from .glove import Glove
 
 
-class threadsafe_iter:
+class ThreadsafeIterator:
     """
     Takes an iterator/generator and makes it thread-safe by
     serializing call to the `next` method of given iterator/generator.
@@ -34,7 +34,7 @@ def threadsafe_generator(f):
     """
 
     def g(*a, **kw):
-        return threadsafe_iter(f(*a, **kw))
+        return ThreadsafeIterator(f(*a, **kw))
 
     return g
 
@@ -64,11 +64,11 @@ class DataLoader(object):
         elif partition == 'val':
             return len(self.validation_metadata)
         else:
-            raise ValueError
+            raise ValueError("partition {} not valid".format(partition))
 
     def _load_metadata(self, partition):
         if partition != 'train' and partition != 'val':
-            raise ValueError
+            raise ValueError("partition {} not valid".format(partition))
 
         captions_filepath = os.path.join(self.annotations_dir, 'captions_{}2014.json'.format(partition))
 
@@ -116,7 +116,7 @@ class DataLoader(object):
             images_dir = self.validatoin_images_dir
             metadata = self.validation_metadata
         else:
-            raise ValueError
+            raise ValueError("partition {} not valid".format(partition))
 
         batch_count = int(np.floor(len(metadata) / batch_size))
 
