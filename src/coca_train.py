@@ -1,10 +1,15 @@
+# hack to make parent dir (`src` available) for import, when calling this file directly
+import sys; import os; sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 import os
 from argparse import ArgumentParser
 
-from dataloader.dataloader import DataLoader
-from model import create_model
+from src.common.dataloader.dataloader import DataLoader
+from src.coca.model import create_model
 
-from utils import common_callbacks
+from src.common.callbacks import common_callbacks
+
+from src.settings.settings import Settings
 
 
 def train(cnn, batch_size, epochs, devices=None):
@@ -16,11 +21,13 @@ def train(cnn, batch_size, epochs, devices=None):
     train_generator = dataloader.generator('train', batch_size)
     validation_generator = dataloader.generator('val', batch_size, train_flag=False)
 
+    gpus = 0
     if devices:
         devices = [str(d) for d in devices]
         os.environ['CUDA_VISIBLE_DEVICES'] = ', '.join(devices)
+        gpus = len(devices)
 
-    model = create_model(cnn, gpus=len(devices))
+    model = create_model(cnn, gpus=gpus)
     model.summary()
 
     callbacks = common_callbacks(batch_size=batch_size)
@@ -33,6 +40,12 @@ def train(cnn, batch_size, epochs, devices=None):
                         callbacks=callbacks,
                         verbose=1,
                         workers=2)
+
+    settings = Settings()
+    model_dir = settings.get_path('models')
+    model_path = os.path.join(model_dir, 'model_{}_{}_{}.model'.format(cnn, batch_size, epochs))
+
+    model.save(model_path)
 
 
 if __name__ == "__main__":

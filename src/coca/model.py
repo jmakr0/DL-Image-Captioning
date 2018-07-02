@@ -3,9 +3,9 @@ from keras.models import Model
 from keras.optimizers import Adam
 from keras.utils import multi_gpu_model
 
-from modules.custom_lstm import CustomLSTM
+from src.coca.modules.custom_lstm import CustomLSTM
 
-from src.coca.settings.settings import Settings
+from src.settings.settings import Settings
 
 
 def image_embedding(input_tensor, cnn='resnet152'):
@@ -20,7 +20,7 @@ def image_embedding(input_tensor, cnn='resnet152'):
     """
 
     if cnn == 'resnet152':
-        from modules.resnet import ResNet152Embed as resnet
+        from src.common.modules.resnet import ResNet152Embed as resnet
     elif cnn == 'resnet50':
         from keras.applications.resnet50 import ResNet50 as resnet
     else:
@@ -58,16 +58,17 @@ def language_model(input_tensor):
 def create_model(cnn, gpus=None):
     settings = Settings()
     img_shape = settings.get_image_dimensions()
-    max_caption_length = settings.get_max_caption_length()
 
     img_input = Input(shape=img_shape, name='img_input')
     img_embedding = image_embedding(img_input, cnn=cnn)
     x = language_model(img_embedding)
 
     model = Model(input=img_input, output=x, name='img_cap')
-    adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0., amsgrad=False)
+
     if gpus and gpus >= 2:
         model = multi_gpu_model(model, gpus=gpus, cpu_merge=True, cpu_relocation=False)
+
+    adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0., amsgrad=False)
     model.compile(optimizer=adam, loss='mean_squared_error', metrics=['accuracy'])
 
     return model
