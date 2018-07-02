@@ -1,21 +1,21 @@
+import sys
+
 import numpy as np
 from scipy import spatial
 
-from settings import Settings
+from src.coca.settings.settings import Settings
 
 
 class Glove:
-    DIMENSIONS = 50
-
     def __init__(self, dictionary_size=40000):
         self.dictionary_size = dictionary_size
-        self.dimensions = self.DIMENSIONS
 
         settings = Settings()
         self.embedding_path = settings.get_glove_embedding()
+        self.word_embedding_size = settings.get_word_embedding_size()
 
         self.word_numbers = {}
-        self.embedding_vectors = np.zeros((dictionary_size + 1, self.DIMENSIONS))
+        self.embedding_vectors = np.zeros((dictionary_size + 1, self.word_embedding_size))
         self.words = {}
 
     def load_embedding(self):
@@ -53,7 +53,7 @@ class Glove:
         seq = text.split()
         return [word for word in seq if word]
 
-    def text_to_sequence(self, text, limit=None):
+    def text_to_word_indices(self, text, limit=None):
         vector = []
 
         if isinstance(text, list):
@@ -72,44 +72,26 @@ class Glove:
 
         return vector
 
-    def embedd_list_of_sentences(self, sentences, max_sentence_length=25):
-        result = []
-        for sentence in sentences:
-            embedded_sentence = self.embedd_string_sequence(sentence)
+    def embed_text(self, string, max_caption_length):
+        index_sequence = self.text_to_word_indices(string, limit=max_caption_length)
 
-            # add padding for sentence
-            result.append(self._padd_string_sequence(embedded_sentence, max_sentence_length))
+        embedded_words = self.embedding_vectors[index_sequence]
+        zero_vector = np.zeros(shape=(max_caption_length, self.word_embedding_size))
+        zero_vector[:len(embedded_words)] = embedded_words
 
-        return result
-
-    def embedd_string_sequence(self, string_seq):
-        word_list = self._text_to_word_sequence(string_seq)
-        return [self.get_word_vector(w) for w in word_list]
-
-    def _padd_string_sequence(self, sequence, length):
-        zero_vector = np.zeros(self.DIMENSIONS)
-
-        padding_size = length - len(sequence)
-
-        result = sequence + [zero_vector] * padding_size
-
-        return result
+        return zero_vector
 
     def wordembedding_to_most_similar_word(self, v_embedding):
         most_similar_word = None
-        min_diff = 1000
+        min_diff = sys.maxsize
 
         # if runtime too bad, see: https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/models/keyedvectors.py
         for word_number in self.word_numbers.values():
             v_compare_embedding = self.embedding_vectors[word_number]
 
-            diff = self._embedding_similarity(v_embedding, v_compare_embedding)
+            diff = spatial.distance.cosine(v_embedding, v_compare_embedding)
             if diff < min_diff:
                 most_similar_word = self.words[word_number]
                 min_diff = diff
 
         return most_similar_word
-
-    def _embedding_similarity(self, emb1, emb2):
-        diff = spatial.distance.cosine(emb1, emb2)
-        return diff

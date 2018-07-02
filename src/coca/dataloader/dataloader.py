@@ -4,9 +4,11 @@ import random
 import threading
 
 import numpy as np
+from keras_preprocessing.image import load_img
 
-from glove import Glove
-from image_loader import load_image
+from src.coca.settings.settings import Settings
+from .glove import Glove
+from .image_loader import load_image
 
 
 class threadsafe_iter:
@@ -39,20 +41,37 @@ def threadsafe_generator(f):
 
 
 class DataLoader(object):
+    def __init__(self, max_caption_length):
+        settings = Settings()
+        self.annotations_dir = settings.get_path('annotations')
+        self.train_images_dir = settings.get_path('train_images')
+        self.validatoin_images_dir = settings.get_path('validation_images')
 
-    def __init__(self, args_dict):
+        self.word_embedding_size = settings.get_word_embedding_size()
 
-        self.capture_dir = args_dict['capture_dir']
-        self.train_images_dir = args_dict['train_images_dir']
-        self.val_images_dir = args_dict['val_images_dir']
+        self.image_dimensions = settings.get_image_dimensions()
+
+        self.max_caption_length = max_caption_length
 
         self.glove = Glove()
         self.glove.load_embedding()
 
-    def _load_metadata(self, partition):
-        result = []
+        self.train_metadata = self._load_metadata('train')
+        self.validation_metadata = self._load_metadata('val')
 
-        captions_filepath = os.path.join(self.capture_dir, 'captions_' + partition + '2014.json')
+    def get_dataset_size(self, partition):
+        if partition == 'train':
+            return len(self.train_metadata)
+        elif partition == 'val':
+            return len(self.validation_metadata)
+        else:
+            raise ValueError
+
+    def _load_metadata(self, partition):
+        if partition != 'train' and partition != 'val':
+            raise ValueError
+
+        captions_filepath = os.path.join(self.annotations_dir, 'captions_{}2014.json'.format(partition))
 
         file = open(captions_filepath, 'r')
         data = json.load(file)
@@ -60,91 +79,76 @@ class DataLoader(object):
         annotations_raw = data['annotations']
         images_raw = data['images']
 
+        images_metadata = self._images_metadata(images_raw)
+        annotations = self._annotations(annotations_raw)
+
+        result = []
+        for id in images_metadata.keys():
+            for annotation in annotations[id]:
+                result.append((images_metadata[id], annotation))
+        return result
+
+    def _images_metadata(self, images_raw):
         images_metadata = {}
-
         for image in images_raw:
-            img_data = {}
-            img_data['filename'] = image['file_name']
-            img_data['width'] = image['width']
-            img_data['height'] = image['height']
-
+            img_data = {
+                'filename': image['file_name'],
+                'width': image['width'],
+                'height': image['height']
+            }
             images_metadata[image['id']] = img_data
+        return images_metadata
 
+    def _annotations(self, annotations_raw):
         annotations = {}
-
         for annotation in annotations_raw:
             if not annotation['image_id'] in annotations:
                 annotations[annotation['image_id']] = [annotation['caption']]
             else:
                 annotations[annotation['image_id']].append(annotation['caption'])
-
-        for id in list(images_metadata.keys()):
-            img_meta = images_metadata[id]
-            captions = annotations[id]
-
-            result.append((img_meta, captions))
-
-        return result
-
-    def _create_image_caption_pairs(self, metadata):
-        '''
-        takes metadata in form of (image_info, [caption_1, caption_2, ...])
-        and returns list of tupels of form (image_info, caption_n)
-        '''
-        result = []
-
-        image_info, captions = metadata
-
-        for caption in captions:
-            result.append((image_info, caption))
-
-        return result
-
-    def _transform_metadata(self, metadata_list):
-        '''
-        takes a list of metainfos [(img_info_1, [cap_1_1, cap_1_2,...]), (img_info_2, [cap_2_1, cap_2_2,...]), ...]
-        and returns [(img_info_1, cap_1_1), (img_info_1, cap_1_2), (img_info_2, cap_2_1)]
-        '''
-
-        result = []
-
-        for meta in metadata_list:
-            transformed_meta = self._create_image_caption_pairs(meta)
-            result += transformed_meta
-
-        return result
+        return annotations
 
     @threadsafe_generator
     def generator(self, partition, batch_size, train_flag=True):
-        if partition == "train":
+        if partition == 'train':
             images_dir = self.train_images_dir
+            metadata = self.train_metadata
+        elif partition == 'val':
+            images_dir = self.validatoin_images_dir
+            metadata = self.val_metadata
         else:
-            images_dir = self.val_images_dir
+            raise ValueError
 
-        metadata = self._load_metadata('train')
-        metadata = self._transform_metadata(metadata)
-
-        # image_filenames = [f for f in listdir(images_dir) if isfile(join(images_dir, f)) and f.endswith('.jpg')]
-        rng = int(np.floor(len(metadata) / batch_size))
+        batch_count = int(np.floor(len(metadata) / batch_size))
 
         while True:
-
             if train_flag:
                 random.shuffle(metadata)
 
-            for i in range(rng):
-                batch = metadata[i * batch_size:i * batch_size + batch_size]
+            for batch_number in range(batch_count):
+                batch = metadata[batch_number * batch_size:batch_number * batch_size + batch_size]
 
-                transformed_batch = []
+                images = np.zeros(shape=(batch_size,) + self.image_dimensions)
+                captions = np.zeros(shape=(batch_size, self.max_caption_length, self.word_embedding_size))
 
-                for image_meta, caption in batch:
-                    image_path = os.path.join(images_dir, image_meta['filename'])
+                for i, (image_metadata, caption) in enumerate(batch):
+                    image_path = os.path.join(images_dir, image_metadata['filename'])
 
-                    image = load_image(image_path)
+                    images[i] = load_image(image_path)
+                    captions[i] = self.glove.embed_text(caption, self.max_caption_length)
 
-                    # create list with word embeddings
-                    embedded_caption = self.glove.embedd_string_sequence(caption)
+                yield (images, captions)
 
-                    transformed_batch.append([image, embedded_caption])
+    def _load_image(self, file_path):
+        if len(self.image_dimensions) == 2:
+            image = load_img(file_path, target_size=(self.image_dimensions[0], self.image_dimensions[1]), grayscale=True)
+        elif len(self.image_dimensions) == 3:
+            image = load_img(file_path, target_size=(self.image_dimensions[0], self.image_dimensions[1]))
+        else:
+            raise ValueError('Image shape has to be 2 or 3 dimensional.')
+        result = np.array(image, dtype=np.float)
+        # normalize
+        result = result / 255 * 2
+        result = result - 1
 
-                yield transformed_batch
+        return result
