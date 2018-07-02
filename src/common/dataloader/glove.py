@@ -3,7 +3,7 @@ import sys
 import numpy as np
 from scipy import spatial
 
-from src.coca.settings.settings import Settings
+from src.settings.settings import Settings
 
 
 class Glove:

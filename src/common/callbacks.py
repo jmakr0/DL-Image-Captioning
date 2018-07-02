@@ -2,7 +2,7 @@ import os
 
 from keras.callbacks import TensorBoard, CSVLogger, EarlyStopping, ModelCheckpoint
 
-from src.coca.settings.settings import Settings
+from src.settings.settings import Settings
 
 
 def common_callbacks(batch_size=64, make_dirs=True):

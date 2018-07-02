@@ -2,12 +2,12 @@ import json
 import os
 import random
 import threading
+import keras
 
 import numpy as np
-import keras
 from keras_preprocessing.image import load_img
 
-from src.coca.settings.settings import Settings
+from src.settings.settings import Settings
 from .glove import Glove
 
 

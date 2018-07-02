@@ -1,7 +1,7 @@
 from keras.layers import Input
 from keras.optimizers import SGD
 
-from modules.resnet import ResNet152Embed
+from src.common.modules.resnet import ResNet152Embed
 
 
 def main():
