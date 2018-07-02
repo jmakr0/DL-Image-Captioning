@@ -9,6 +9,8 @@ from src.coca.model import create_model
 
 from src.common.callbacks import common_callbacks
 
+from src.coca.settings.settings import Settings
+
 
 def train(cnn, batch_size, epochs, devices=None):
     dataloader = DataLoader()
@@ -38,6 +40,12 @@ def train(cnn, batch_size, epochs, devices=None):
                         callbacks=callbacks,
                         verbose=1,
                         workers=2)
+
+    settings = Settings()
+    model_dir = settings.get_path('models')
+    model_path = os.path.join(model_dir, 'model_{}_{}_{}.model'.format(cnn, batch_size, epochs))
+
+    model.save(model_path)
 
 
 if __name__ == "__main__":
