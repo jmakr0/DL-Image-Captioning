@@ -5,8 +5,8 @@ import threading
 
 import numpy as np
 
-from .glove import Glove
-from .image_loader import load_image
+from src.coca.dataloader.glove import Glove
+from src.coca.dataloader.image_loader import load_image
 
 
 class threadsafe_iter:
@@ -40,13 +40,13 @@ def threadsafe_generator(f):
 
 class DataLoader(object):
 
-    def __init__(self, args_dict):
+    def __init__(self, args_dict, max_caption_len):
 
         self.capture_dir = args_dict['capture_dir']
         self.train_images_dir = args_dict['train_images_dir']
         self.val_images_dir = args_dict['val_images_dir']
 
-        self.glove = Glove()
+        self.glove = Glove(max_caption_len=max_caption_len)
         self.glove.load_embedding()
 
     def _load_metadata(self, partition):
@@ -144,6 +144,8 @@ class DataLoader(object):
 
                 for image_meta, caption in batch:
                     image_path = os.path.join(images_dir, image_meta['filename'])
+                    # FIXME
+                    image_path = '/Users/nils/Desktop/test/train2014/COCO_train2014_000000193853.jpg'
 
                     image = load_image(image_path)
 
