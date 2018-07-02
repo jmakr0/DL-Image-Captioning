@@ -7,7 +7,7 @@ from .settings import Settings
 class Glove:
     DIMENSIONS = 50
 
-    def __init__(self, dictionary_size=40000):
+    def __init__(self, dictionary_size=40000, max_caption_len=15):
         self.dictionary_size = dictionary_size
         self.dimensions = self.DIMENSIONS
 
@@ -17,6 +17,9 @@ class Glove:
         self.word_numbers = {}
         self.embedding_vectors = np.zeros((dictionary_size + 1, self.DIMENSIONS))
         self.words = {}
+
+        self.max_caption_len = max_caption_len
+
 
     def load_embedding(self):
         with open(self.embedding_path, 'r', encoding='utf-8') as f:
@@ -72,21 +75,22 @@ class Glove:
 
         return vector
 
-    def embedd_list_of_sentences(self, sentences, max_sentence_length=25):
+    def embedd_list_of_sentences(self, sentences):
         result = []
         for sentence in sentences:
             embedded_sentence = self.embedd_string_sequence(sentence)
 
             # add padding for sentence
-            result.append(self._padd_string_sequence(embedded_sentence, max_sentence_length))
+            result.append(self._padd_sequence(embedded_sentence, self.max_caption_len))
 
         return result
 
     def embedd_string_sequence(self, string_seq):
         word_list = self._text_to_word_sequence(string_seq)
-        return [self.get_word_vector(w) for w in word_list]
+        embedded_words = [self.get_word_vector(w) for w in word_list]
+        return self._padd_sequence(embedded_words, self.max_caption_len)
 
-    def _padd_string_sequence(self, sequence, length):
+    def _padd_sequence(self, sequence, length):
         zero_vector = np.zeros(self.DIMENSIONS)
 
         padding_size = length - len(sequence)

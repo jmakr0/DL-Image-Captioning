@@ -3,18 +3,19 @@ from keras import backend as K
 from src.coca.model import image_captioning_model
 from src.coca.dataloader.dataloader import DataLoader
 
+MAX_CAPTION_LEN = 15
 
 def main():
 
     K.set_learning_phase(0)
     batch_size = 2
-    model = image_captioning_model(batch_size)
+    model = image_captioning_model(MAX_CAPTION_LEN)
     root_dir = '/data'
     dl_args = {'capture_dir': root_dir + '/annotations',
                'train_images_dir': root_dir + '/train2014',
                'val_images_dir': root_dir + '/val2014'}
 
-    dataloader = DataLoader(dl_args)
+    dataloader = DataLoader(dl_args, MAX_CAPTION_LEN)
     N_train = dataloader.get_dataset_size('train')
     N_val = dataloader.get_dataset_size('val')
     train_gen = dataloader.generator('train', batch_size)

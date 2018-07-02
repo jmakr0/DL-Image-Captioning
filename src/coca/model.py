@@ -7,14 +7,11 @@ from keras.optimizers import Adam
 from src.coca.dataloader.glove import Glove
 # from src.coca.modules.resnet import ResNet152Embed
 
-
-MAX_LEN_CAPTION = 15
-
-
-def image_captioning_model(lr=3e-3):
+def image_captioning_model(max_caption_len, lr=3e-3):
     # Definition of CNN
     cnn = ResNet50(weights='imagenet')
     cnn.layers.pop()  # remove classification layer
+    # cnn = Input((10,10))
     cnn_input = cnn.input
 
     # image_shape = (224, 224, 3)
@@ -40,11 +37,11 @@ def image_captioning_model(lr=3e-3):
     batch_size = K.shape(cnn.input)[0]
 
     # Caption Input. Consider supporting all five of them.
-    caption_input = Input((MAX_LEN_CAPTION, Glove.DIMENSIONS))
+    caption_input = Input((max_caption_len, Glove.DIMENSIONS))
 
     # Definition of RNN
     rnn = LSTM(666, return_sequences=False, return_state=True)
-    attention_layer = Dense(cnn_output_len, activation='relu')
+    attention_layer = Dense(cnn_output_len, activation='sigmoid')
     embedding_layer = Dense(Glove.DIMENSIONS, activation='relu')
 
     emd_word_start = Input(tensor=K.zeros((1, Glove.DIMENSIONS)))
@@ -54,7 +51,7 @@ def image_captioning_model(lr=3e-3):
     state = None
 
     caption = []
-    for i in range(MAX_LEN_CAPTION):
+    for i in range(max_caption_len):
         attention_image = Multiply()([cnn_output, attention])  # Review: clip attention
         rnn_in = Concatenate()([emd_word, attention_image])
 
@@ -71,4 +68,5 @@ def image_captioning_model(lr=3e-3):
     caption = Concatenate(axis=0)(caption)
 
     model = Model(inputs=[cnn_input, caption_input, attention_start, emd_word_start], outputs=caption)
+    model.summary()
     model.compile(optimizer=Adam(lr=lr), loss='mean_squared_error', metrics=['accuracy'])
