@@ -13,6 +13,7 @@ class Glove:
         settings = Settings()
         self.embedding_path = settings.get_glove_embedding()
         self.word_embedding_size = settings.get_word_embedding_size()
+        self.max_caption_length = settings.get_max_caption_length()
 
         self.word_numbers = {}
         self.embedding_vectors = np.zeros((dictionary_size + 1, self.word_embedding_size))
@@ -72,11 +73,11 @@ class Glove:
 
         return vector
 
-    def embed_text(self, string, max_caption_length):
-        index_sequence = self.text_to_word_indices(string, limit=max_caption_length)
+    def embed_text(self, string):
+        index_sequence = self.text_to_word_indices(string, limit=self.max_caption_length)
 
         embedded_words = self.embedding_vectors[index_sequence]
-        zero_vector = np.zeros(shape=(max_caption_length, self.word_embedding_size))
+        zero_vector = np.zeros(shape=(self.max_caption_length, self.word_embedding_size))
         zero_vector[:len(embedded_words)] = embedded_words
 
         return zero_vector

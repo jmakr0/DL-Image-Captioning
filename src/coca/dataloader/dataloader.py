@@ -4,6 +4,7 @@ import random
 import threading
 
 import numpy as np
+import keras
 from keras_preprocessing.image import load_img
 
 from src.coca.settings.settings import Settings
@@ -41,17 +42,15 @@ def threadsafe_generator(f):
 
 
 class DataLoader(object):
-    def __init__(self, max_caption_length):
+    def __init__(self):
         settings = Settings()
         self.annotations_dir = settings.get_path('annotations')
         self.train_images_dir = settings.get_path('train_images')
         self.validatoin_images_dir = settings.get_path('validation_images')
 
         self.word_embedding_size = settings.get_word_embedding_size()
-
         self.image_dimensions = settings.get_image_dimensions()
-
-        self.max_caption_length = max_caption_length
+        self.max_caption_length = settings.get_max_caption_length()
 
         self.glove = Glove()
         self.glove.load_embedding()
@@ -135,7 +134,7 @@ class DataLoader(object):
                     image_path = os.path.join(images_dir, image_metadata['filename'])
 
                     images[i] = load_image(image_path)
-                    captions[i] = self.glove.embed_text(caption, self.max_caption_length)
+                    captions[i] = self.glove.embed_text(caption)
 
                 yield (images, captions)
 
