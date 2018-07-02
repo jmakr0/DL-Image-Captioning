@@ -4,6 +4,8 @@ from argparse import ArgumentParser
 from dataloader.dataloader import DataLoader
 from model import create_model
 
+from utils import common_callbacks
+
 
 def train(cnn, batch_size, epochs, devices=None):
     dataloader = DataLoader()
@@ -21,11 +23,14 @@ def train(cnn, batch_size, epochs, devices=None):
     model = create_model(cnn, gpus=len(devices))
     model.summary()
 
+    callbacks = common_callbacks(batch_size=batch_size)
+
     model.fit_generator(train_generator,
                         epochs=epochs,
                         validation_data=validation_generator,
                         steps_per_epoch=train_dataset_size / batch_size,
                         validation_steps=validation_dataset_size / batch_size,
+                        callbacks=callbacks,
                         verbose=1,
                         workers=2)
 

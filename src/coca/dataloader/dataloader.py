@@ -9,10 +9,9 @@ from keras_preprocessing.image import load_img
 
 from src.coca.settings.settings import Settings
 from .glove import Glove
-from .image_loader import load_image
 
 
-class threadsafe_iter:
+class ThreadsafeIterator:
     """
     Takes an iterator/generator and makes it thread-safe by
     serializing call to the `next` method of given iterator/generator.
@@ -36,7 +35,7 @@ def threadsafe_generator(f):
     """
 
     def g(*a, **kw):
-        return threadsafe_iter(f(*a, **kw))
+        return ThreadsafeIterator(f(*a, **kw))
 
     return g
 
@@ -64,11 +63,11 @@ class DataLoader(object):
         elif partition == 'val':
             return len(self.validation_metadata)
         else:
-            raise ValueError
+            raise ValueError("partition {} not valid".format(partition))
 
     def _load_metadata(self, partition):
         if partition != 'train' and partition != 'val':
-            raise ValueError
+            raise ValueError("partition {} not valid".format(partition))
 
         captions_filepath = os.path.join(self.annotations_dir, 'captions_{}2014.json'.format(partition))
 
@@ -114,9 +113,9 @@ class DataLoader(object):
             metadata = self.train_metadata
         elif partition == 'val':
             images_dir = self.validatoin_images_dir
-            metadata = self.val_metadata
+            metadata = self.validation_metadata
         else:
-            raise ValueError
+            raise ValueError("partition {} not valid".format(partition))
 
         batch_count = int(np.floor(len(metadata) / batch_size))
 
@@ -132,8 +131,7 @@ class DataLoader(object):
 
                 for i, (image_metadata, caption) in enumerate(batch):
                     image_path = os.path.join(images_dir, image_metadata['filename'])
-
-                    images[i] = load_image(image_path)
+                    images[i] = self._load_image(image_path)
                     captions[i] = self.glove.embed_text(caption)
 
                 yield (images, captions)
