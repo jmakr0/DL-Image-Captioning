@@ -1,14 +1,12 @@
 import os
 
-from keras.utils import multi_gpu_model
-
 from model import create_model
 from dataloader.dataloader import DataLoader
 
 from utils import common_callbacks
 
 
-def train(log_dir, batch_size=64, multi_gpu=None):
+def train(batch_size=64, multi_gpu=None):
     max_caption_length = 25
 
     dataloader = DataLoader(max_caption_length)
@@ -22,7 +20,7 @@ def train(log_dir, batch_size=64, multi_gpu=None):
 
     model.summary()
 
-    callbacks = common_callbacks(log_dir, batch_size=batch_size)
+    callbacks = common_callbacks(batch_size=batch_size)
 
     model.fit_generator(train_generator,
                         validation_data=validation_generator,
@@ -35,5 +33,5 @@ def train(log_dir, batch_size=64, multi_gpu=None):
 
 if __name__ == "__main__":
     os.environ['CUDA_VISIBLE_DEVICES'] = "0,1"
-    train('./data/log', batch_size=64, multi_gpu=2)
+    train(batch_size=64, multi_gpu=2)
 

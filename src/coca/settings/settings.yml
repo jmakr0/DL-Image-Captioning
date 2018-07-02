@@ -5,6 +5,7 @@ paths:
   annotations: '/data/dl_lecture_data/TrainVal/annotations'
   train_images: '/data/dl_lecture_data/TrainVal/train2014'
   validation_images: '/data/dl_lecture_data/TrainVal/val2014'
+  logs: '/media/sebastian/Data WD_Blue/Sebastian/Documents/Projects/DL-Image-Captioning/data/logs'
 
 image_dimensions: [224, 224, 3]
 
