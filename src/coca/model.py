@@ -60,7 +60,7 @@ def create_model(max_caption_len, gpus=None):
 
     model = Model(input=img_input, output=x, name='img_cap')
     adam = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0., amsgrad=False)
-    if gpus:
+    if gpus and gpus >= 2:
         model = multi_gpu_model(model, gpus=gpus, cpu_merge=True, cpu_relocation=False)
     model.compile(optimizer=adam, loss='mean_squared_error', metrics=['accuracy'])
 
