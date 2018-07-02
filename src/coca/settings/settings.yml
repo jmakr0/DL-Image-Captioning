@@ -1,0 +1,11 @@
+embeddings:
+  glove: '/home/cps8/data/glove.6B.50d.txt'
+
+paths:
+  annotations: '/data/dl_lecture_data/TrainVal/annotations'
+  train_images: '/data/dl_lecture_data/TrainVal/train2014'
+  validation_images: '/data/dl_lecture_data/TrainVal/val2014'
+
+image_dimensions: [224, 224, 3]
+
+word_embedding_size: 50
