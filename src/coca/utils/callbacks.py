@@ -2,13 +2,18 @@ import os
 
 from keras.callbacks import TensorBoard, CSVLogger, EarlyStopping, ModelCheckpoint
 
+from src.coca.settings.settings import Settings
 
-def common_callbacks(log_dir, batch_size=64, make_dirs=True):
+
+def common_callbacks(batch_size=64, make_dirs=True):
+    settings = Settings()
+    log_dir = settings.get_path('logs')
+
     tensorboard_dir = os.path.join(log_dir, 'tensorboard')
     checkpoints_dir = os.path.join(log_dir, 'model_checkpoints')
     csv_log_file = os.path.join(log_dir, 'metrics_log.csv')
 
-    # create log folder
+    # create log folders
     if make_dirs:
         try:
             os.makedirs(tensorboard_dir)
