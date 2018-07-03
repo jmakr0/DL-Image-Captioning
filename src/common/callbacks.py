@@ -36,7 +36,7 @@ def common_callbacks(batch_size=64, make_dirs=True):
         EarlyStopping(monitor='val_loss', patience=5, mode='auto', baseline=None),
         ModelCheckpoint(os.path.join(
             checkpoints_dir,
-            "weights.{epoch:02d}-{val_loss:2.f}.h5"),
+            "weights.{epoch:02d}-{val_loss:2f}.h5"),
             monitor='val_loss',
             save_best_only=True,
             save_weights_only=True)
