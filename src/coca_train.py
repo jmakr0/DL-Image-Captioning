@@ -12,7 +12,7 @@ from src.common.callbacks import common_callbacks
 from src.settings.settings import Settings
 
 
-def train(cnn, batch_size, epochs, devices=None):
+def train(cnn, batch_size, epochs, devices=None, workers=4):
     # get train and val dataset loader
     train_sequence = TrainSequence(batch_size)
     val_sequence = ValSequence(batch_size)
@@ -35,7 +35,7 @@ def train(cnn, batch_size, epochs, devices=None):
                         validation_data=val_sequence,
                         callbacks=callbacks,
                         verbose=1,
-                        workers=4,                      # workers consuming the sequence
+                        workers=workers,                # workers consuming the sequence
                         use_multiprocessing=True,       # uses multiprocessing instead of multithreading
                         max_queue_size=20)              # generator queue size
 
@@ -53,6 +53,7 @@ if __name__ == "__main__":
     arg_parse.add_argument('--batch_size', type=int, default=64)
     arg_parse.add_argument('--epochs', type=int, default=50)
     arg_parse.add_argument('--devices', type=int, nargs='*')
+    arg_parse.add_argument('--workers', type=int, default=4)
     arg_parse.add_argument('--settings_yml', type=str, default=None)
 
     arguments = arg_parse.parse_args()
@@ -66,4 +67,4 @@ if __name__ == "__main__":
             raise FileNotFoundError("{} is not a file".format(yml_file))
         Settings.FILE = yml_file
 
-    train(arguments.cnn, arguments.batch_size, arguments.epochs, arguments.devices)
+    train(arguments.cnn, arguments.batch_size, arguments.epochs, arguments.devices, arguments.workers)
