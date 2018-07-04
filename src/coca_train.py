@@ -29,12 +29,15 @@ def train(cnn, batch_size, epochs, devices=None):
 
     callbacks = common_callbacks(batch_size=batch_size)
 
+    # steps_per_epoch, validation_steps derived from Sequence
     model.fit_generator(train_sequence,
                         epochs=epochs,
                         validation_data=val_sequence,
                         callbacks=callbacks,
                         verbose=1,
-                        workers=2)
+                        workers=4,                      # workers consuming the sequence
+                        use_multiprocessing=True,       # uses multiprocessing instead of multithreading
+                        max_queue_size=20)              # generator queue size
 
     settings = Settings()
     model_dir = settings.get_path('models')
