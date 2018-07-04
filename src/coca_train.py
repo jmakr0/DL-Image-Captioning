@@ -22,10 +22,11 @@ def train(cnn, batch_size, epochs, devices=None):
     validation_generator = dataloader.generator('val', batch_size, train_flag=False)
 
     gpus = 0
-    if devices:
+    if devices is not None:  # this lets one specify the device "0" (would lead to `false` with `if devices:`)
         devices = [str(d) for d in devices]
         os.environ['CUDA_VISIBLE_DEVICES'] = ', '.join(devices)
         gpus = len(devices)
+        print("CUDA devices specified: {}, using {} gpus".format(devices, gpus))
 
     model = create_model(cnn, gpus=gpus)
     model.summary()
