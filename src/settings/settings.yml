@@ -6,7 +6,7 @@ paths:
   train_images: '/data/dl_lecture_data/TrainVal/train2014'
   validation_images: '/data/dl_lecture_data/TrainVal/val2014'
   logs: '/home/cps8/logs'
-  model: '/home/cps8/models'
+  models: '/home/cps8/models'
 
 image_dimensions: [224, 224, 3]
 
