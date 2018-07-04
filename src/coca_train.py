@@ -55,7 +55,16 @@ if __name__ == "__main__":
     arg_parse.add_argument('--batch_size', type=int, default=64)
     arg_parse.add_argument('--epochs', type=int, default=50)
     arg_parse.add_argument('--devices', type=int, nargs='*')
+    arg_parse.add_argument('--yml', type=str, default=None)
 
     arguments = arg_parse.parse_args()
+
+    if arguments.yml:
+        # overwrite settings file path
+        # hacky!!
+        print("Using settings file path: {}".format(arguments.yml))
+        if not os.path.isfile(arguments.yml):
+            raise FileNotFoundError("{} is not a file".format(arguments.yml))
+        Settings.FILE = arguments.yml
 
     train(arguments.cnn, arguments.batch_size, arguments.epochs, arguments.devices)
