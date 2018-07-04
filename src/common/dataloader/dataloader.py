@@ -2,7 +2,6 @@ import json
 import os
 import random
 import threading
-import keras
 
 import numpy as np
 from keras_preprocessing.image import load_img
