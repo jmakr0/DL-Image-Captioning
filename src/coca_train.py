@@ -4,7 +4,7 @@ import sys; import os; sys.path.append(os.path.join(os.path.dirname(__file__), '
 import os
 from argparse import ArgumentParser
 
-from src.common.dataloader.dataloader import DataLoader
+from src.common.dataloader.dataloader import TrainSequence, ValSequence
 from src.coca.model import create_model
 
 from src.common.callbacks import common_callbacks
@@ -13,13 +13,9 @@ from src.settings.settings import Settings
 
 
 def train(cnn, batch_size, epochs, devices=None):
-    dataloader = DataLoader()
-
-    train_dataset_size = dataloader.get_dataset_size('train')
-    validation_dataset_size = dataloader.get_dataset_size('val')
-
-    train_generator = dataloader.generator('train', batch_size)
-    validation_generator = dataloader.generator('val', batch_size, train_flag=False)
+    # get train and val dataset loader
+    train_sequence = TrainSequence(batch_size)
+    val_sequence = ValSequence(batch_size)
 
     gpus = 0
     if devices is not None:  # this lets one specify the device "0" (would lead to `false` with `if devices:`)
@@ -33,11 +29,9 @@ def train(cnn, batch_size, epochs, devices=None):
 
     callbacks = common_callbacks(batch_size=batch_size)
 
-    model.fit_generator(train_generator,
+    model.fit_generator(train_sequence,
                         epochs=epochs,
-                        validation_data=validation_generator,
-                        steps_per_epoch=train_dataset_size / batch_size,
-                        validation_steps=validation_dataset_size / batch_size,
+                        validation_data=val_sequence,
                         callbacks=callbacks,
                         verbose=1,
                         workers=2)
