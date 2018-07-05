@@ -34,7 +34,7 @@ class DataLoadingSequence(Sequence):
         self.batch_size = batch_size
 
     def __len__(self):
-        return int(np.floor(len(self.metadata) / self.batch_size))
+        return int(np.floor(len(self.metadata) / float(self.batch_size)))
 
     def __getitem__(self, index):
         bs = self.batch_size
@@ -53,8 +53,8 @@ class DataLoadingSequence(Sequence):
     def _load_metadata(self, partition):
         captions_filepath = os.path.join(self.annotations_dir, 'captions_{}2014.json'.format(partition))
 
-        file = open(captions_filepath, 'r')
-        data = json.load(file)
+        with open(captions_filepath, 'r') as file:
+            data = json.load(file)
 
         annotations_raw = data['annotations']
         images_raw = data['images']
