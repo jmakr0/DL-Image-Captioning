@@ -1,3 +1,0 @@
-embeddings:
-  # glove: '/home/cps8/data/glove.6B.50d.txt'
-  glove: '/home/cps8/data/glove.6B.50d_normalized.txt'

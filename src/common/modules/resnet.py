@@ -5,8 +5,8 @@ from keras.layers import Conv2D, BatchNormalization, Activation, ZeroPadding2D, 
     AveragePooling2D, Flatten, Dense, add, GlobalAveragePooling2D, GlobalMaxPooling2D
 from keras.models import Model
 
-from .layers.bnScale import BNScale
-from .weights_downloader import download_ResNet152_weights_tf, download_ResNet152_weights_th
+from src.common.modules.layers.bnScale import BNScale
+from src.common.modules.weights_downloader import download_ResNet152_weights_tf, download_ResNet152_weights_th
 
 
 def _identity_block(input_tensor, kernel_size, filters, bn_axis, stage, block):

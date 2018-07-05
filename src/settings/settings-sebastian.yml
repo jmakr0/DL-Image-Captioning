@@ -1,0 +1,15 @@
+embeddings:
+  glove: '/dl_data/glove/glove.6B.50d_normalized.txt'
+
+paths:
+  annotations: '/dl_data/TrainVal/annotations'
+  train_images: '/dl_data/TrainVal/train2014'
+  val_images: '/dl_data/TrainVal/val2014'
+  logs: '/dl_data/logs'
+  models: '/dl_data/models'
+
+image_dimensions: [224, 224, 3]
+
+word_embedding_size: 50
+
+max_caption_length: 25
