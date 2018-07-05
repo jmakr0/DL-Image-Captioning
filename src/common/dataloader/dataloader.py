@@ -4,6 +4,7 @@ import random
 import threading
 
 import numpy as np
+from keras import preprocessing  # keras_preprocessing has to be loaded
 from keras_preprocessing.image import load_img
 
 from src.settings.settings import Settings

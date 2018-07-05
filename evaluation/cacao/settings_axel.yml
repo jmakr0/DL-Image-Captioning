@@ -1,0 +1,15 @@
+embeddings:
+  glove: 'C:/data/CDL_2018/glove/glove.6B.50d_normalized.txt'
+
+paths:
+  annotations: 'C:/data/CDL_2018/TrainVal/annotations_trainval2014/annotations'
+  train_images: 'C:/data/CDL_2018/TrainVal/train2014/train2014'
+  validation_images: 'C:/data/CDL_2018/TrainVal/val2014/val2014'
+  logs: 'C:/repo/DL-Image-Captioning/evaluation/cacao/logs'
+  models: 'C:/repo/DL-Image-Captioning/evaluation/cacao/models'
+
+image_dimensions: [224, 224, 3]
+
+word_embedding_size: 50
+
+max_caption_length: 15

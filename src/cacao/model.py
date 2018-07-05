@@ -1,64 +1,53 @@
 from keras import backend as K
 from keras import Model, Input
-from keras.applications import ResNet50
-from keras.layers import Dense, LSTM, Multiply, Concatenate, Reshape, Lambda
+from keras.applications import ResNet50 as resnet50
+from keras.layers import Dense, LSTM, Multiply, Concatenate, Reshape, Lambda, Flatten, GlobalAveragePooling2D
 from keras.optimizers import Adam
+from keras.utils import multi_gpu_model
+
+from src.common.modules.resnet import ResNet152Embed as resnet152
 
 
-# from src.coca.modules.resnet import ResNet152Embed
-from src.common.dataloader.glove import Glove
+def image_captioning_model(lr=3e-3, cnn='resnet152', gpus=None, img_shape=(224, 224, 3),
+                           embedding_dim=50,
+                           max_caption_length=15):
 
-MAX_LEN_CAPTION = 15
-
-
-def image_captioning_model(lr=3e-3):
     # Definition of CNN
-    cnn = ResNet50(weights='imagenet')
-    cnn.layers.pop()  # remove classification layer
-    cnn_input = cnn.input
-
-    # image_shape = (224, 224, 3)
-    # cnn_input = Input(shape=image_shape, name='img_input')
-    # cnn = ResNet152Embed(
-    #     include_top=False,
-    #     weights='imagenet',
-    #     input_tensor=cnn_input,
-    #     input_shape=image_shape
-    # )
-
-    # BatchNorm, Flatten, etc?
-    # cnn_output = cnn.output
-    # cnn_output = BatchNormalization(axis=-1)(cnn_output)
-    # cnn_output = Flatten(name='im_flatten')(cnn_output)
-
-    # consider allowing training of last layers
+    cnn_input = Input(shape=img_shape)
+    cnn = eval(cnn)(
+            include_top=False,
+            weights='imagenet',
+            input_tensor=cnn_input,
+            input_shape=img_shape
+    )
     for layer in cnn.layers:
         layer.trainable = False
+    cnn_output = (Flatten() if cnn == 'resnet152' else GlobalAveragePooling2D())(cnn.output)
 
-    cnn_output_len = cnn.layers[-1].output_shape[-1]
-    cnn_output = cnn.layers[-1].output
-    batch_size = K.shape(cnn.input)[0]
+    # Caption Input.
+    caption_input = Input((max_caption_length, embedding_dim))
 
-    # Caption Input. Consider supporting all five of them.
-    caption_input = Input((MAX_LEN_CAPTION, Glove.DIMENSIONS))
+    # Vars
+    cnn_output_len = int(cnn_output.shape[-1])
+    batch_size = K.shape(cnn_input)[0]
 
     # Definition of RNN
     rnn = LSTM(666, return_sequences=False, return_state=True)
     attention_layer = Dense(cnn_output_len, activation='relu')
-    embedding_layer = Dense(Glove.DIMENSIONS, activation='relu')
+    embedding_layer = Dense(embedding_dim, activation='relu')
 
-    emd_word_start = Input(tensor=K.zeros((1, Glove.DIMENSIONS)))
+    emd_word_start = Input(tensor=K.zeros((1, embedding_dim)))
     emd_word = Lambda(lambda x: K.tile(x, (batch_size, 1)))(emd_word_start)
     attention_start = Input(tensor=K.ones((1, cnn_output_len)))
     attention = Lambda(lambda x: K.tile(x, (batch_size, 1)))(attention_start)
     state = None
 
     caption = []
-    for i in range(MAX_LEN_CAPTION):
-        attention_image = Multiply()([cnn_output, attention])  # Review: clip attention
+    for i in range(max_caption_length):
+        attention_image = Multiply()([cnn_output, attention])
         rnn_in = Concatenate()([emd_word, attention_image])
 
-        rnn_in = Reshape((1, Glove.DIMENSIONS + cnn_output_len))(rnn_in)
+        rnn_in = Reshape((1, embedding_dim + cnn_output_len))(rnn_in)
         rnn_out, hidden_state, cell_state = rnn(rnn_in, initial_state=state)
         state = (hidden_state, cell_state)
 
@@ -67,8 +56,12 @@ def image_captioning_model(lr=3e-3):
 
         caption.append(emd_word)
         if K.learning_phase():
-            emd_word = Lambda(lambda x: x[:, i], arguments={'i': i})(caption_input)
+            emd_word = Lambda(lambda x, ii: x[:, ii], arguments={'ii': i})(caption_input)
     caption = Concatenate(axis=0)(caption)
 
+    # Assemble Model
     model = Model(inputs=[cnn_input, caption_input, attention_start, emd_word_start], outputs=caption)
-    model.compile(optimizer=Adam(lr=lr), loss='mean_squared_error', metrics=['accuracy'])
+    if len(gpus) >= 2:
+        model = multi_gpu_model(model, gpus=gpus)
+    model.compile(optimizer=Adam(lr=lr), loss='mean_squared_error', metrics=['mae', 'acc'])
+    return model

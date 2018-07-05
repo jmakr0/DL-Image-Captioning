@@ -1,6 +1,7 @@
 import argparse
 import sys; import os; sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
+import numpy as np
 from keras import backend as K
 
 from src.cacao.model import image_captioning_model
@@ -33,6 +34,10 @@ def train():
      * More models with different behaviors. maybe one parametrized model definition
      * Experiments on all models. Also include the CustomLSTM Layer variant.
      * Think about project structure.
+
+     * max caption len in train data
+     * consider allowing training of last layers
+     * Review: clip attention
     """
     K.set_learning_phase(1)
 
@@ -42,14 +47,12 @@ def train():
     train_generator = dataloader.generator('train', args.batch_size)
     validation_generator = dataloader.generator('val', args.batch_size, train_flag=False)
 
-    # for testing purposes
-    for batch in train_generator:
-        print(batch)
-        break
+    config = Settings()
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = ', '.join(args.devices)
-
-    model = image_captioning_model(args.lr, args.cnn, gpus=len(args.devices))
+    os.environ['CUDA_VISIBLE_DEVICES'] = str(args.devices)
+    model = image_captioning_model(lr=args.lr, cnn=args.cnn, gpus=args.devices, img_shape=config.get_image_dimensions(),
+                                   embedding_dim=config.get_word_embedding_size(),
+                                   max_caption_length=config.get_max_caption_length())
     model.summary()
 
     callbacks = common_callbacks(batch_size=args.batch_size)
@@ -63,24 +66,27 @@ def train():
                         verbose=1,
                         workers=2)
 
-    settings = Settings()
-    model_dir = settings.get_path('models')
-    model_path = os.path.join(model_dir, 'model_{}_{}_{}.model'.format(args.cnn, args.batch_size, args.epochs))
+    model_dir = config.get_path('models')
+    model_path = os.path.join(model_dir, f'model{args.exp_id}_{args.cnn}_{args.batch_size}_{args.epochs}.model')
 
     model.save(model_path)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Say hello')
-    parser.add_argument('devices', default=[], help='GPUs to use')
-    parser.add_argument('--devices', type=int, nargs='*')  # ToDo
+    parser.add_argument('--exp_id', default=np.random.randint(20, 1000), type=int)
+    parser.add_argument('--settings', default='C:/repo/DL-Image-Captioning/evaluation/cacao/settings_axel.yml')
+    parser.add_argument('--devices', default=[0], type=int, nargs='*', help='GPUs to use')
+    parser.add_argument('--epochs', default=50, type=int)
+    parser.add_argument('--batch_size', default=30, type=int)
+    parser.add_argument('--cnn', default='resnet50', choices=['resnet50', 'resnet152'])
+    parser.add_argument('--lr', default=3e-3, type=float)
 
-    parser.add_argument('epochs', default=50)
-    parser.add_argument('batch_size', default=30)
-    parser.add_argument('lr', default=3e-3, help='learning_rate')
-    parser.add_argument('cnn', default='resnet152', help='choose "resnet152" or "resnet50"')  # ToDo: choice
-
-    parser.add_argument('final_submission', default=False)  # ToDo: boolean
-
+    parser.add_argument('--final_submission', default='False', choices=['True', 'False'])
     args = parser.parse_args()
+
+    if not os.path.isfile(args.settings):
+        raise FileNotFoundError(f'Settings under {args.settings} do not exist.')
+    Settings.FILE = args.settings
+
     train()
