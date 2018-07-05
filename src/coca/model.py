@@ -63,7 +63,7 @@ def create_model(cnn, gpus=None):
     img_embedding = image_embedding(img_input, cnn=cnn)
     x = language_model(img_embedding)
 
-    model = Model(input=img_input, output=x, name='img_cap')
+    model = Model(inputs=img_input, outputs=x, name='img_cap')
 
     if gpus and gpus >= 2:
         model = multi_gpu_model(model, gpus=gpus, cpu_merge=True, cpu_relocation=False)

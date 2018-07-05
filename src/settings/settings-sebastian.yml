@@ -4,7 +4,7 @@ embeddings:
 paths:
   annotations: '/dl_data/TrainVal/annotations'
   train_images: '/dl_data/TrainVal/train2014'
-  validation_images: '/dl_data/TrainVal/val2014'
+  val_images: '/dl_data/TrainVal/val2014'
   logs: '/dl_data/logs'
   models: '/dl_data/models'
 
