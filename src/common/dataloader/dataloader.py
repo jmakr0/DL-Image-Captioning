@@ -12,7 +12,7 @@ from src.settings.settings import Settings
 
 class DataLoadingSequence(Sequence):
 
-    def __init__(self, partition, batch_size, shuffle=False):
+    def __init__(self, partition, batch_size, input_caption=False, shuffle=False):
         if partition != 'train' and partition != 'val':
             raise ValueError("partition `{}` is not valid. Either specify `train` or `val`".format(partition))
 
@@ -32,6 +32,7 @@ class DataLoadingSequence(Sequence):
             random.shuffle(self.metadata)
 
         self.batch_size = batch_size
+        self.input_caption = input_caption
 
     def __len__(self):
         return int(np.floor(len(self.metadata) / self.batch_size))
@@ -48,7 +49,7 @@ class DataLoadingSequence(Sequence):
             images[i] = self._load_image(image_path)
             captions[i] = self.glove.embed_text(caption)
 
-        return images, captions
+        return (images, captions) if self.input_caption is False else ([images, captions], captions)
 
     def _load_metadata(self, partition):
         captions_filepath = os.path.join(self.annotations_dir, 'captions_{}2014.json'.format(partition))
@@ -105,12 +106,10 @@ class DataLoadingSequence(Sequence):
 
 
 class TrainSequence(DataLoadingSequence):
-
-    def __init__(self, batch_size):
-        super().__init__('train', batch_size)
+    def __init__(self, batch_size, input_caption=False):
+        super().__init__('train', batch_size, input_caption=input_caption)
 
 
 class ValSequence(DataLoadingSequence):
-
-    def __init__(self, batch_size):
-        super().__init__('val', batch_size, shuffle=False)
+    def __init__(self, batch_size, input_caption=False):
+        super().__init__('val', batch_size, input_caption=input_caption, shuffle=False)

@@ -4,7 +4,7 @@ embeddings:
 paths:
   annotations: 'C:/data/CDL_2018/TrainVal/annotations_trainval2014/annotations'
   train_images: 'C:/data/CDL_2018/TrainVal/train2014/train2014'
-  validation_images: 'C:/data/CDL_2018/TrainVal/val2014/val2014'
+  val_images: 'C:/data/CDL_2018/TrainVal/val2014/val2014'
   logs: 'C:/repo/DL-Image-Captioning/evaluation/cacao/logs'
   models: 'C:/repo/DL-Image-Captioning/evaluation/cacao/models'
 
