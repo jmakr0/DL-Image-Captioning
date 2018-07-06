@@ -12,19 +12,20 @@ from src.settings.settings import Settings
 
 class DataLoadingSequence(Sequence):
 
-    def __init__(self, partition, batch_size, shuffle=False, test_mode=False):
+    def __init__(self, partition, batch_size, shuffle=False):
         if partition != 'train' and partition != 'val' and partition != 'test':
             raise ValueError("partition `{}` is not valid. Either specify `train` or `val`".format(partition))
 
         settings = Settings()
 
-        if test_mode:
+        self.partition = partition
+
+        if self._in_test_mode():
             self.annotations_dir = settings.get_path('test_metadata')
             self.images_dir = settings.get_path('test_images')
         else:
             self.annotations_dir = settings.get_path('annotations')
             self.images_dir = settings.get_path("{}_images".format(partition))
-
 
         self.word_embedding_size = settings.get_word_embedding_size()
         self.image_dimensions = settings.get_image_dimensions()
@@ -33,19 +34,18 @@ class DataLoadingSequence(Sequence):
         self.glove = Glove()
         self.glove.load_embedding()
 
-        self.metadata = self._load_metadata(partition, test_mode)
+        self.metadata = self._load_metadata()
         if partition == 'train' and shuffle:
             random.shuffle(self.metadata)
 
         self.batch_size = batch_size
-        self.test_mode = test_mode
 
     def __len__(self):
         return int(np.floor(len(self.metadata) / float(self.batch_size)))
 
     def __getitem__(self, index):
         bs = self.batch_size
-        batch = self.metadata[index * bs:(index+1) * bs]
+        batch = self.metadata[index * bs:(index + 1) * bs]
 
         images = np.zeros(shape=(bs,) + self.image_dimensions)
         captions = np.zeros(shape=(bs, self.max_caption_length, self.word_embedding_size))
@@ -55,17 +55,16 @@ class DataLoadingSequence(Sequence):
             images[i] = self._load_image(image_path)
             captions[i] = self.glove.embed_text(caption)
 
-        if self.test_mode:
+        if self._in_test_mode():
             return images
         else:
             return images, captions
 
-
-    def _load_metadata(self, partition, test_mode):
-        if partition == 'test':
+    def _load_metadata(self):
+        if self._in_test_mode():
             metadata_filepath = os.path.join(self.annotations_dir, 'input.json')
         else:
-            metadata_filepath = os.path.join(self.annotations_dir, 'captions_{}2014.json'.format(partition))
+            metadata_filepath = os.path.join(self.annotations_dir, 'captions_{}2014.json'.format(self.partition))
 
         with open(metadata_filepath, 'r') as file:
             data = json.load(file)
@@ -75,7 +74,7 @@ class DataLoadingSequence(Sequence):
         images_raw = data['images']
         images_metadata = self._images_metadata(images_raw)
 
-        if test_mode:
+        if self._in_test_mode():
             for annotation_id in images_metadata.keys():
                 result.append((images_metadata[annotation_id], ''))
         else:
@@ -109,7 +108,8 @@ class DataLoadingSequence(Sequence):
 
     def _load_image(self, file_path):
         if len(self.image_dimensions) == 2:
-            image = load_img(file_path, target_size=(self.image_dimensions[0], self.image_dimensions[1]), grayscale=True)
+            image = load_img(file_path, target_size=(self.image_dimensions[0], self.image_dimensions[1]),
+                             grayscale=True)
         elif len(self.image_dimensions) == 3:
             image = load_img(file_path, target_size=(self.image_dimensions[0], self.image_dimensions[1]))
         else:
@@ -121,6 +121,9 @@ class DataLoadingSequence(Sequence):
         result = result - 1
 
         return result
+
+    def _in_test_mode(self):
+        return self.partition == 'test'
 
 
 class TrainSequence(DataLoadingSequence):
@@ -134,7 +137,8 @@ class ValSequence(DataLoadingSequence):
     def __init__(self, batch_size):
         super().__init__('val', batch_size, shuffle=False)
 
+
 class TestSequence(DataLoadingSequence):
 
     def __init__(self, batch_size):
-        super().__init__('test', batch_size, shuffle=False, test_mode=True)
+        super().__init__('test', batch_size, shuffle=False)
