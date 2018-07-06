@@ -12,13 +12,19 @@ from src.settings.settings import Settings
 
 class DataLoadingSequence(Sequence):
 
-    def __init__(self, partition, batch_size, shuffle=False):
-        if partition != 'train' and partition != 'val':
+    def __init__(self, partition, batch_size, shuffle=False, test_mode=False):
+        if partition != 'train' and partition != 'val' and partition != 'test':
             raise ValueError("partition `{}` is not valid. Either specify `train` or `val`".format(partition))
 
         settings = Settings()
-        self.annotations_dir = settings.get_path('annotations')
-        self.images_dir = settings.get_path("{}_images".format(partition))
+
+        if test_mode:
+            self.annotations_dir = settings.get_path('test_metadata')
+            self.images_dir = settings.get_path('test_images')
+        else:
+            self.annotations_dir = settings.get_path('annotations')
+            self.images_dir = settings.get_path("{}_images".format(partition))
+
 
         self.word_embedding_size = settings.get_word_embedding_size()
         self.image_dimensions = settings.get_image_dimensions()
@@ -27,11 +33,12 @@ class DataLoadingSequence(Sequence):
         self.glove = Glove()
         self.glove.load_embedding()
 
-        self.metadata = self._load_metadata(partition)
+        self.metadata = self._load_metadata(partition, test_mode)
         if partition == 'train' and shuffle:
             random.shuffle(self.metadata)
 
         self.batch_size = batch_size
+        self.test_mode = test_mode
 
     def __len__(self):
         return int(np.floor(len(self.metadata) / float(self.batch_size)))
@@ -48,24 +55,36 @@ class DataLoadingSequence(Sequence):
             images[i] = self._load_image(image_path)
             captions[i] = self.glove.embed_text(caption)
 
-        return images, captions
+        if self.test_mode:
+            return images
+        else:
+            return images, captions
 
-    def _load_metadata(self, partition):
-        captions_filepath = os.path.join(self.annotations_dir, 'captions_{}2014.json'.format(partition))
 
-        with open(captions_filepath, 'r') as file:
+    def _load_metadata(self, partition, test_mode):
+        if partition == 'test':
+            metadata_filepath = os.path.join(self.annotations_dir, 'input.json')
+        else:
+            metadata_filepath = os.path.join(self.annotations_dir, 'captions_{}2014.json'.format(partition))
+
+        with open(metadata_filepath, 'r') as file:
             data = json.load(file)
 
-        annotations_raw = data['annotations']
-        images_raw = data['images']
-
-        images_metadata = self._images_metadata(images_raw)
-        annotations = self._annotations(annotations_raw)
-
         result = []
-        for annotation_id in images_metadata.keys():
-            for annotation in annotations[annotation_id]:
-                result.append((images_metadata[annotation_id], annotation))
+
+        images_raw = data['images']
+        images_metadata = self._images_metadata(images_raw)
+
+        if test_mode:
+            for annotation_id in images_metadata.keys():
+                result.append((images_metadata[annotation_id], ''))
+        else:
+            annotations_raw = data['annotations']
+            annotations = self._annotations(annotations_raw)
+
+            for annotation_id in images_metadata.keys():
+                for annotation in annotations[annotation_id]:
+                    result.append((images_metadata[annotation_id], annotation))
         return result
 
     def _images_metadata(self, images_raw):
@@ -114,3 +133,8 @@ class ValSequence(DataLoadingSequence):
 
     def __init__(self, batch_size):
         super().__init__('val', batch_size, shuffle=False)
+
+class TestSequence(DataLoadingSequence):
+
+    def __init__(self, batch_size):
+        super().__init__('test', batch_size, shuffle=False, test_mode=True)

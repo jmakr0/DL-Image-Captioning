@@ -5,6 +5,8 @@ paths:
   annotations: '/data/dl_lecture_data/TrainVal/annotations'
   train_images: '/data/dl_lecture_data/TrainVal/train2014'
   val_images: '/data/dl_lecture_data/TrainVal/val2014'
+  test_metadata: '/app/test/data'
+  test_images: '/app/test/data'
   logs: '/home/cps8/logs'
   models: '/home/cps8/models'
 
