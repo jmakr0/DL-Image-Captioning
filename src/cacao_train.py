@@ -69,7 +69,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', default=3e-3, type=float)
     parser.add_argument('--workers', default=4, type=int)
 
-    parser.add_argument('--final_submission', default='False', choices=['True', 'False'])
+    # parser.add_argument('--final_submission', default='False', choices=['True', 'False'])
     args = parser.parse_args()
 
     if not os.path.isfile(args.settings):

@@ -112,4 +112,4 @@ class TrainSequence(DataLoadingSequence):
 
 class ValSequence(DataLoadingSequence):
     def __init__(self, batch_size, input_caption=False):
-        super().__init__('val', batch_size, input_caption=input_caption, shuffle=False)
+        super().__init__('val', batch_size, input_caption=input_caption)
