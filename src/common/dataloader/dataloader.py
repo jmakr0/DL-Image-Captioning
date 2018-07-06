@@ -12,7 +12,7 @@ from src.settings.settings import Settings
 
 class DataLoadingSequence(Sequence):
 
-    def __init__(self, partition, batch_size, input_caption=False, shuffle=False):
+    def __init__(self, partition, batch_size, input_caption=False, shuffle=True):
         if partition != 'train' and partition != 'val':
             raise ValueError("partition `{}` is not valid. Either specify `train` or `val`".format(partition))
 

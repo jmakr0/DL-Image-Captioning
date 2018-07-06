@@ -22,13 +22,10 @@ def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_d
     for layer in cnn.layers:
         layer.trainable = False
     cnn_output = (Flatten() if cnn == 'resnet152' else GlobalAveragePooling2D())(cnn.output)
-
-    # Caption Input.
-    caption_input = Input((max_caption_length, embedding_dim))
-
-    # Vars
     cnn_output_len = int(cnn_output.shape[-1])
-    batch_size = K.shape(cnn_input)[0]
+
+    # Caption Input
+    caption_input = Input((max_caption_length, embedding_dim))
 
     # Definition of RNN
     rnn = LSTM(666, return_sequences=False, return_state=True)
@@ -36,10 +33,11 @@ def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_d
     embedding_layer = Dense(embedding_dim, activation='relu')
 
     # Start vars
-    embd_word_start = Input(tensor=K.ones((1, embedding_dim)))
-    embd_word = Lambda(lambda x: K.tile(x, (batch_size, 1)))(embd_word_start)
-    attention_start = Input(tensor=K.ones((1, cnn_output_len)))
-    attention = Lambda(lambda x: K.tile(x, (batch_size, 1)))(attention_start)
+    def constant(input_batch, size):
+        batch_size = K.shape(input_batch)[0]
+        return K.tile(K.ones((1, size)), (batch_size, 1))
+    embd_word = Lambda(constant, arguments={'size': embedding_dim})(cnn_input)
+    attention = Lambda(constant, arguments={'size': cnn_output_len})(cnn_input)
     state = None
 
     words = []
@@ -62,7 +60,7 @@ def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_d
     caption = Concatenate(axis=1)(words)
 
     # Assemble Model
-    model = Model(inputs=[cnn_input, caption_input, attention_start, embd_word_start], outputs=caption)
+    model = Model(inputs=[cnn_input, caption_input], outputs=caption)
     if len(gpus) >= 2:
         model = multi_gpu_model(model, gpus=gpus)
     model.compile(optimizer=Adam(lr=lr), loss='mean_squared_error', metrics=['mae', 'acc'])
