@@ -1,15 +1,17 @@
 embeddings:
-  glove: '/home/cps8/data/glove.6B.50d_normalized.txt'
+  glove: '/usr/src/app/data/glove.6B.50d_normalized.txt'
 
 paths:
-  annotations: '/data/dl_lecture_data/TrainVal/annotations'
-  train_images: '/data/dl_lecture_data/TrainVal/train2014'
-  val_images: '/data/dl_lecture_data/TrainVal/val2014'
-  logs: '/home/cps8/logs'
-  models: '/home/cps8/models'
+  annotations: '/usr/src/app/data/input/TrainVal/annotations'
+  train_images: '/usr/src/app/data/input/TrainVal/train2014'
+  val_images: '/usr/src/app/data/input/TrainVal/val2014'
+  test_metadata: '/usr/src/app/data/'
+  test_images: '/usr/src/app/data/'
+  logs: '/usr/src/app/data/logs'
+  models: '/usr/src/app/data/models'
 
 image_dimensions: [224, 224, 3]
 
 word_embedding_size: 50
 
-max_caption_length: 25
+max_caption_length: 15
