@@ -42,7 +42,7 @@ def common_callbacks(batch_size=64, make_dirs=True):
             save_weights_only=True),
         ModelCheckpoint(os.path.join(
             checkpoints_dir,
-            "model.{epoch:02d}-{val_loss:.4f}.h5"),
+            "model.{epoch:02d}-{val_loss:.4f}.pkl"),
             monitor='val_loss',
             save_best_only=True,
             save_weights_only=False)
