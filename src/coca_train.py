@@ -5,14 +5,14 @@ import os
 from argparse import ArgumentParser
 
 from src.common.dataloader.dataloader import TrainSequence, ValSequence
-from src.coca.model import create_model
+from src.coca.model import create_model, load_coca_model
 
 from src.common.callbacks import common_callbacks
 
 from src.settings.settings import Settings
 
 
-def train(cnn, batch_size, epochs, devices=None, workers=4):
+def train(cnn, batch_size, epochs, devices=None, workers=4, mw_path=None):
     # get train and val dataset loader
     train_sequence = TrainSequence(batch_size)
     val_sequence = ValSequence(batch_size)
@@ -24,7 +24,13 @@ def train(cnn, batch_size, epochs, devices=None, workers=4):
         gpus = len(devices)
         print("CUDA devices specified: {}, using {} gpus".format(devices, gpus))
 
-    model = create_model(cnn, gpus=gpus)
+    # if weights_path is a pickled model --> load it
+    try:
+        model = load_coca_model(mw_path)
+    # otherwise: create model and if weights_path is a weights file load the weights into it
+    except (ValueError, TypeError):
+        model = create_model(cnn, gpus=gpus, weights_path=mw_path)
+
     model.summary()
 
     callbacks = common_callbacks(batch_size=batch_size)
@@ -55,6 +61,7 @@ if __name__ == "__main__":
     arg_parse.add_argument('--devices', type=int, nargs='*')
     arg_parse.add_argument('--workers', type=int, default=4)
     arg_parse.add_argument('--settings_yml', type=str, default=None)
+    arg_parse.add_argument('--continue_from', type=str, default=None)
 
     arguments = arg_parse.parse_args()
 
@@ -67,4 +74,11 @@ if __name__ == "__main__":
             raise FileNotFoundError("{} is not a file".format(yml_file))
         Settings.FILE = yml_file
 
-    train(arguments.cnn, arguments.batch_size, arguments.epochs, arguments.devices, arguments.workers)
+    if arguments.continue_from:
+        # check for file existence early
+        continue_from = arguments.continue_from
+        print("Using weights from {} to continue training".format(continue_from))
+        if not os.path.isfile(continue_from):
+            raise FileNotFoundError("{} is not a file".format(continue_from))
+
+    train(arguments.cnn, arguments.batch_size, arguments.epochs, arguments.devices, arguments.workers, arguments.continue_from)
