@@ -9,7 +9,7 @@ from src.common.modules.resnet import ResNet152Embed as resnet152
 
 
 def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_dim=50, max_caption_length=15,
-                           gpus=None, lr=1e-3):
+                           gpus=0, lr=1e-3):
 
     # Definition of CNN
     cnn_input = Input(shape=img_shape)
