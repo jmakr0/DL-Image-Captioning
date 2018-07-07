@@ -113,7 +113,7 @@ class Glove:
         """
 
     def init_sims(self):
-        if not self.vectors_norm:
+        if getattr(self, 'vectors_norm', None) is None:
             self.vectors_norm = (
                     self.embedding_vectors / np.sqrt((self.embedding_vectors ** 2).sum(-1))[..., np.newaxis]
             ).astype(np.float32)
