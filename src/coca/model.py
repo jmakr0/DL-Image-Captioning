@@ -1,10 +1,11 @@
+from keras.engine.saving import load_model
 from keras.layers import Input, Flatten, RepeatVector, Dense, GlobalAveragePooling2D
 from keras.models import Model
 from keras.optimizers import Adam
+
 from keras.utils import multi_gpu_model
 
 from src.coca.modules.custom_lstm import CustomLSTM
-
 from src.settings.settings import Settings
 
 
@@ -55,7 +56,7 @@ def language_model(input_tensor):
     return x
 
 
-def create_model(cnn, gpus=None):
+def create_model(cnn, gpus=None, weights_path=None):
     settings = Settings()
     img_shape = settings.get_image_dimensions()
 
@@ -65,6 +66,10 @@ def create_model(cnn, gpus=None):
 
     model = Model(inputs=img_input, outputs=x, name='img_cap')
 
+    # load model weights to continue training
+    if weights_path:
+        model.load_weights(weights_path)
+
     if gpus and gpus >= 2:
         model = multi_gpu_model(model, gpus=gpus, cpu_merge=True, cpu_relocation=False)
 
@@ -72,3 +77,9 @@ def create_model(cnn, gpus=None):
     model.compile(optimizer=adam, loss='mean_squared_error', metrics=['accuracy'])
 
     return model
+
+
+def load_coca_model(filename):
+    return load_model(filename, custom_objects={
+        "CustomLSTM": CustomLSTM
+    })
