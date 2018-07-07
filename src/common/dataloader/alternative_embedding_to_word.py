@@ -7,9 +7,9 @@ import numpy as np
 def main():
     gl = Glove()
     gl.load_embedding()
-    man_vec = gl.get_word_vector('man')
+    man_vec = gl.get_word_vector('apple')
     # make random addition
-    man_vec = np.add(man_vec, np.random.rand(*man_vec.shape))
+    #man_vec = np.add(man_vec, np.random.rand(*man_vec.shape))
 
     most_sim_word = gl.most_similar_word(man_vec)
     our_most_sim_word = gl.wordembedding_to_most_similar_word(man_vec)

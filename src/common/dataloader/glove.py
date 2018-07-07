@@ -87,6 +87,9 @@ class Glove:
         return zero_vector
 
     def wordembedding_to_most_similar_word(self, v_embedding):
+        # use numpy-version from gensim instead:
+        return self.most_similar_word(v_embedding)
+        """
         most_similar_word = None
         min_diff = sys.maxsize
 
@@ -107,6 +110,7 @@ class Glove:
                 min_diff = diff
 
         return most_similar_word
+        """
 
     def init_sims(self):
         if not self.vectors_norm:
@@ -114,24 +118,13 @@ class Glove:
                     self.embedding_vectors / np.sqrt((self.embedding_vectors ** 2).sum(-1))[..., np.newaxis]
             ).astype(np.float32)
 
-        # # original statemet from the link mentioned above:
-        # # self.vectors_norm = (self.vectors / sqrt((self.vectors ** 2).sum(-1))[..., newaxis]).astype(REAL)
-        # emb_vecs = self.embedding_vectors
-        # emb_vecs_squared = self.embedding_vectors ** 2
-        # sum_emb = emb_vecs_squared.sum(-1)
-        # sqrt = np.sqrt(sum_emb)
-        # newaxis = sqrt[..., np.newaxis]
-        # self.vectors_norm = (emb_vecs / newaxis).astype(np.float32)
-
     def most_similar_word(self, embedding):
+        """
+        see: https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/models/keyedvectors.py
+        """
         self.init_sims()
 
         unit_vector = matutils.unitvec(embedding).astype(np.float32)
         dists = np.dot(self.vectors_norm, unit_vector)
-        min = np.argmin(dists)
-        return self.words[min]
-
-        # first vertor of self.embeddings is also a zerovector, the index of the first word embedding is 1
-        index_with_min_distance = np.argmin(dists[1:])
-        # got index offset because we left out the first elem in distances list
-        return self.words[index_with_min_distance + 1]
+        nearest = np.argmax(dists)
+        return self.words[nearest]
