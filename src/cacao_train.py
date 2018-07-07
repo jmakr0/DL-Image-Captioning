@@ -36,7 +36,7 @@ def train():
     val_sequence = ValSequence(args.batch_size, input_caption=True)
 
     config = Settings()
-    callbacks = common_callbacks(batch_size=args.batch_size)
+    callbacks = common_callbacks(batch_size=args.batch_size, exp_id=args.exp_id)
     os.environ['CUDA_VISIBLE_DEVICES'] = ', '.join(map(str, args.devices))
 
     model = image_captioning_model(lr=args.lr, cnn=args.cnn, gpus=args.devices, img_shape=config.get_image_dimensions(),
@@ -60,13 +60,13 @@ def train():
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Say hello')
-    parser.add_argument('--exp_id', default=np.random.randint(20, 1000), type=int)
+    parser.add_argument('--exp_id', default=str(np.random.randint(20, 1000)), type=str)
     parser.add_argument('--settings', default=None, type=str)
     parser.add_argument('--devices', default=[0], type=int, nargs='*', help='GPUs to use')
     parser.add_argument('--cnn', default='resnet50', choices=['resnet50', 'resnet152'])
     parser.add_argument('--epochs', default=50, type=int)
     parser.add_argument('--batch_size', default=30, type=int)
-    parser.add_argument('--lr', default=3e-3, type=float)
+    parser.add_argument('--lr', default=1e-3, type=float)
     parser.add_argument('--workers', default=4, type=int)
 
     # parser.add_argument('--final_submission', default='False', choices=['True', 'False'])

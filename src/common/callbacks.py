@@ -5,13 +5,13 @@ from keras.callbacks import TensorBoard, CSVLogger, EarlyStopping, ModelCheckpoi
 from src.settings.settings import Settings
 
 
-def common_callbacks(batch_size=64, make_dirs=True):
+def common_callbacks(batch_size=64, make_dirs=True, exp_id=''):
     settings = Settings()
     log_dir = settings.get_path('logs')
 
-    tensorboard_dir = os.path.join(log_dir, 'tensorboard')
-    checkpoints_dir = os.path.join(log_dir, 'model_checkpoints')
-    csv_log_file = os.path.join(log_dir, 'metrics_log.csv')
+    tensorboard_dir = os.path.join(log_dir, exp_id + 'tensorboard')
+    checkpoints_dir = os.path.join(log_dir, exp_id + 'model_checkpoints')
+    csv_log_file = os.path.join(log_dir, exp_id + 'metrics_log.csv')
 
     # create log folders
     if make_dirs:
@@ -33,7 +33,7 @@ def common_callbacks(batch_size=64, make_dirs=True):
             write_grads=False,
             write_images=False),
         CSVLogger(csv_log_file),
-        EarlyStopping(monitor='val_loss', patience=15, mode='auto', baseline=None),
+        EarlyStopping(monitor='val_loss', patience=5, mode='auto', baseline=None),
         ModelCheckpoint(os.path.join(
             checkpoints_dir,
             "weights.{epoch:02d}-{val_loss:.4f}.h5"),

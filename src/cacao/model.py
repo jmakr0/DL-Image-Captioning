@@ -9,7 +9,7 @@ from src.common.modules.resnet import ResNet152Embed as resnet152
 
 
 def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_dim=50, max_caption_length=15,
-                           gpus=None, lr=3e-3):
+                           gpus=None, lr=1e-3):
 
     # Definition of CNN
     cnn_input = Input(shape=img_shape)
@@ -28,9 +28,9 @@ def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_d
     caption_input = Input((max_caption_length, embedding_dim))
 
     # Definition of RNN
-    rnn = LSTM(666, return_sequences=False, return_state=True)
-    attention_layer = Dense(cnn_output_len, activation='relu')
-    embedding_layer = Dense(embedding_dim, activation='relu')
+    rnn = LSTM(1024, return_sequences=False, return_state=True)
+    attention_layer = Dense(cnn_output_len, activation='sigmoid')
+    embedding_layer = Dense(embedding_dim, activation='tanh')
 
     # Start vars
     def constant(input_batch, size):
@@ -63,5 +63,5 @@ def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_d
     model = Model(inputs=[cnn_input, caption_input], outputs=caption)
     if len(gpus) >= 2:
         model = multi_gpu_model(model, gpus=gpus)
-    model.compile(optimizer=Adam(lr=lr), loss='mean_squared_error', metrics=['mae', 'acc'])
+    model.compile(optimizer=Adam(lr=lr), loss='mean_squared_error', metrics=['mae'])
     return model
