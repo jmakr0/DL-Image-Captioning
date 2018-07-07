@@ -61,7 +61,7 @@ def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_d
 
     # Assemble Model
     model = Model(inputs=[cnn_input, caption_input], outputs=caption)
-    if len(gpus) >= 2:
+    if gpus >= 2:
         model = multi_gpu_model(model, gpus=gpus)
     model.compile(optimizer=Adam(lr=lr), loss='mean_squared_error', metrics=['mae'])
     return model
