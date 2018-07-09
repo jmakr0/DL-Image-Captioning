@@ -47,16 +47,28 @@ class DataLoadingSequence(Sequence):
         bs = self.batch_size
         batch = self.metadata[index * bs:(index + 1) * bs]
 
+        ids = np.array([image_metadata['id'] for image_metadata, _ in batch])
         images = np.zeros(shape=(bs,) + self.image_dimensions)
         captions = np.zeros(shape=(bs, self.max_caption_length, self.word_embedding_size))
+        skip = []
 
         for i, (image_metadata, caption) in enumerate(batch):
             image_path = os.path.join(self.images_dir, image_metadata['filename'])
-            images[i] = self._load_image(image_path)
+            try:
+                images[i] = self._load_image(image_path)
+            except:
+                skip.append(i)
             captions[i] = self.glove.embed_text(caption)
 
+        mask = np.ones_like(ids, dtype=bool)
+        mask[skip] = False
+        ids = ids[mask]
+        images = images[mask]
+        captions = captions[mask]
+        # care: batch will be smaller
+
         if self._in_test_mode():
-            return images
+            return ids, images
         else:
             return images, captions
 
@@ -92,7 +104,8 @@ class DataLoadingSequence(Sequence):
             img_data = {
                 'filename': image['file_name'],
                 'width': image['width'],
-                'height': image['height']
+                'height': image['height'],
+                'id': image['id']
             }
             images_metadata[image['id']] = img_data
         return images_metadata
@@ -119,7 +132,6 @@ class DataLoadingSequence(Sequence):
         # normalize
         result = result / 255 * 2
         result = result - 1
-
         return result
 
     def _in_test_mode(self):
