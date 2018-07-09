@@ -47,7 +47,7 @@ def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_d
 
         rnn_in = Reshape((1, embedding_dim + cnn_output_len))(rnn_in)
         rnn_out, hidden_state, cell_state = rnn(rnn_in, initial_state=state)
-        state = (hidden_state, cell_state)
+        state = [hidden_state, cell_state]
 
         embd_word = embedding_layer(rnn_out)
         attention = attention_layer(rnn_out)

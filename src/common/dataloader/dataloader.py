@@ -12,7 +12,7 @@ from src.settings.settings import Settings
 
 class DataLoadingSequence(Sequence):
 
-    def __init__(self, partition, batch_size, shuffle=False):
+    def __init__(self, partition, batch_size, input_caption=False, shuffle=True):
         if partition != 'train' and partition != 'val' and partition != 'test':
             raise ValueError("partition `{}` is not valid. Either specify `train` or `val`".format(partition))
 
@@ -39,6 +39,7 @@ class DataLoadingSequence(Sequence):
             random.shuffle(self.metadata)
 
         self.batch_size = batch_size
+        self.input_caption = input_caption
 
     def __len__(self):
         return int(np.floor(len(self.metadata) / float(self.batch_size)))
@@ -68,9 +69,10 @@ class DataLoadingSequence(Sequence):
         # care: batch will be smaller
 
         if self._in_test_mode():
-            return ids, images
+            null_captions = np.zeros_like(captions)
+            return (ids, images) if self.input_caption is False else (ids, [images, null_captions])
         else:
-            return images, captions
+            return (images, captions) if self.input_caption is False else ([images, captions], captions)
 
     def _load_metadata(self):
         if self._in_test_mode():
@@ -140,17 +142,17 @@ class DataLoadingSequence(Sequence):
 
 class TrainSequence(DataLoadingSequence):
 
-    def __init__(self, batch_size):
-        super().__init__('train', batch_size)
+    def __init__(self, batch_size, input_caption=False):
+        super().__init__('train', batch_size, input_caption=input_caption)
 
 
 class ValSequence(DataLoadingSequence):
 
-    def __init__(self, batch_size):
-        super().__init__('val', batch_size, shuffle=False)
+    def __init__(self, batch_size, input_caption=False):
+        super().__init__('val', batch_size, input_caption=input_caption, shuffle=True)
 
 
 class TestSequence(DataLoadingSequence):
 
-    def __init__(self, batch_size):
-        super().__init__('test', batch_size, shuffle=False)
+    def __init__(self, batch_size, input_caption=False):
+        super().__init__('test', batch_size, input_caption=input_caption, shuffle=False)

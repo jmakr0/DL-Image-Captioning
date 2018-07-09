@@ -55,6 +55,7 @@ def train():
     model_dir = config.get_path('models')
     model_path = os.path.join(model_dir, f'model{args.exp_id}_{args.cnn}_{args.batch_size}_{args.epochs}.model')
 
+    model.save_weights(model_path + '_weights')
     model.save(model_path)
 
 
