@@ -12,4 +12,4 @@ image_dimensions: [224, 224, 3]
 
 word_embedding_size: 50
 
-max_caption_length: 25
+max_caption_length: 15

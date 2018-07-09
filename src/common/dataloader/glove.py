@@ -3,6 +3,7 @@ import sys
 import numpy as np
 from scipy import spatial
 
+from src.common.dataloader import matutils
 from src.settings.settings import Settings
 
 
@@ -16,8 +17,9 @@ class Glove:
         self.max_caption_length = settings.get_max_caption_length()
 
         self.word_numbers = {}
-        self.embedding_vectors = np.zeros((dictionary_size + 1, self.word_embedding_size))
+        self.embedding_vectors = np.zeros((dictionary_size, self.word_embedding_size))
         self.words = {}
+        self.vectors_norm = None
 
     def load_embedding(self):
         with open(self.embedding_path, 'r', encoding='utf-8') as f:
@@ -26,12 +28,14 @@ class Glove:
                 word = line_split[0]
                 vector = np.array(line_split[1:], dtype=float)
 
-                self.word_numbers[word] = line_number
-                self.embedding_vectors[line_number] = vector
-                self.words[line_number] = word
+                self.word_numbers[word] = line_number-1
+                self.embedding_vectors[line_number-1] = vector
+                self.words[line_number-1] = word
 
-                if line_number == self.dictionary_size:
+                if line_number-1 == self.dictionary_size:
                     break
+
+        self.vectors_norm = None
 
     def get_word_number(self, word):
         if len(self.word_numbers) == 0:
@@ -83,8 +87,18 @@ class Glove:
         return zero_vector
 
     def wordembedding_to_most_similar_word(self, v_embedding):
+        # use numpy-version from gensim instead:
+        return self.most_similar_word(v_embedding)
+        """
         most_similar_word = None
         min_diff = sys.maxsize
+
+        # lookup for exact match (numpy vectorized operation)
+        indices = np.flatnonzero((self.embedding_vectors == v_embedding).all(1))
+        if len(indices) > 0:
+            print("found early matches: {}".format(", ".join([self.words[i] for i in indices])))
+            # just return first match
+            return self.words[indices[0]]
 
         # if runtime too bad, see: https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/models/keyedvectors.py
         for word_number in self.word_numbers.values():
@@ -96,3 +110,21 @@ class Glove:
                 min_diff = diff
 
         return most_similar_word
+        """
+
+    def init_sims(self):
+        if getattr(self, 'vectors_norm', None) is None:
+            self.vectors_norm = (
+                    self.embedding_vectors / np.sqrt((self.embedding_vectors ** 2).sum(-1))[..., np.newaxis]
+            ).astype(np.float32)
+
+    def most_similar_word(self, embedding):
+        """
+        see: https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/models/keyedvectors.py
+        """
+        self.init_sims()
+
+        unit_vector = matutils.unitvec(embedding).astype(np.float32)
+        dists = np.dot(self.vectors_norm, unit_vector)
+        nearest = np.argmax(dists)
+        return self.words[nearest]
