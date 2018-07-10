@@ -1,6 +1,6 @@
 # hack to make parent dir (`src` available) for import, when calling this file directly
-import os;
-import sys;
+import os
+import sys
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 

@@ -9,7 +9,11 @@ COPY . /usr/src/app
 WORKDIR /usr/src/app
 
 RUN wget https://owncloud.hpi.de/index.php/s/jevzhc3KjyPRheN/download -O glove.6B.50d_normalized.txt
+RUN https://owncloud.hpi.de/index.php/s/1u4V3q2T40iGZWE/download -O weights.h5
+
 RUN mkdir -p data/embedding && mv glove.6B.50d_normalized.txt data/embedding/
+RUN mkdir -p data/weights && mv weights.h5 data/weights/
+RUN mkdir -p data/output
 
 RUN pip3 install -r requirements.txt
 
