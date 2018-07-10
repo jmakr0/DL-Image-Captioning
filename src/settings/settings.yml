@@ -5,8 +5,8 @@ paths:
   annotations: '/usr/src/app/data/input/TrainVal/annotations'
   train_images: '/usr/src/app/data/input/TrainVal/train2014'
   val_images: '/usr/src/app/data/input/TrainVal/val2014'
-  test_metadata: '/usr/src/app/data/'
-  test_images: '/usr/src/app/data/'
+  test_metadata: '/usr/src/app/data/input'
+  test_images: '/usr/src/app/data/input'
   logs: '/usr/src/app/data/logs'
   models: '/usr/src/app/data/models'
 
