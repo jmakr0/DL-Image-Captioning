@@ -30,7 +30,9 @@ def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_d
     # Definition of RNN
     rnn = LSTM(1024, return_sequences=False, return_state=True)
     attention_layer = Dense(cnn_output_len, activation='sigmoid')
-    embedding_layer = Dense(embedding_dim, activation='tanh')
+    embedding_layer1 = Dense(666, activation='relu')
+    embedding_layer2 = Dense(333, activation='relu')
+    embedding_layer3 = Dense(embedding_dim, activation='linear')
 
     # Start vars
     def constant(input_batch, size):
@@ -49,7 +51,9 @@ def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_d
         rnn_out, hidden_state, cell_state = rnn(rnn_in, initial_state=state)
         state = [hidden_state, cell_state]
 
-        embd_word = embedding_layer(rnn_out)
+        embd_word_larger = embedding_layer1(rnn_out)
+        embd_word_large = embedding_layer2(embd_word_larger)
+        embd_word = embedding_layer3(embd_word_large)
         attention = attention_layer(rnn_out)
 
         embd_word_concat = Reshape((1, embedding_dim))(embd_word)
