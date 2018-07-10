@@ -11,7 +11,7 @@ from src.common.dataloader.dataloader import TestSequence, TrainSequence
 from src.settings.settings import Settings
 
 if __name__ == "__main__":
-    os.environ['CUDA_VISIBLE_DEVICES'] = '3'
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
     settings = Settings()
     model_dir = settings.get_path('models')
