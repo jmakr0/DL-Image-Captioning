@@ -1,26 +1,21 @@
-# hack to make parent dir (`src` available) for import, when calling this file directly
 import json
 import os
 import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 from keras.engine.saving import load_model
 
+from src.coca.modules.custom_lstm import CustomLSTM
 from src.common.dataloader.glove import Glove
-
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-
-import os
-
-from src.common.dataloader.dataloader import TestSequence
-
+from src.common.dataloader.dataloader import TestSequence, TrainSequence
 from src.settings.settings import Settings
 
 if __name__ == "__main__":
+    os.environ['CUDA_VISIBLE_DEVICES'] = '3'
 
     settings = Settings()
-    batch_size = 2
     model_dir = settings.get_path('models')
-    model_path = os.path.join(model_dir, 'model.h5') # TODO: use correct filename
+    model_path = os.path.join(model_dir, 'model_resnet50_64_50.model')
 
     output_dir = settings.get_path('output')
     output_path = os.path.join(output_dir, 'results.json')
@@ -28,20 +23,22 @@ if __name__ == "__main__":
     glove = Glove()
     glove.load_embedding()
 
-    model = load_model(model_path)
+    custom_objects = {'CustomLSTM': CustomLSTM}
 
-    test_sequence = TestSequence(50)
+    model = load_model(model_path, custom_objects=custom_objects)
+
+    test_sequence = TestSequence(64)
 
     results = []
-    for ids, images in test_sequence:
+    for i in range(len(test_sequence)):
+        images, ids = test_sequence[i]
         predictions = model.predict_on_batch(images)
 
-        for id_, capt in zip(ids, predictions):
-            cap = ' '.join([glove.most_similar_word(embd_word) for embd_word in capt])  # delete end words
+        for prediction, image_id in zip(predictions, ids):
             results.append({
-                "image_id": int(id_),
-                "caption": cap
+                'image_id': image_id,
+                'caption': ' '.join([glove.most_similar_word(embedding) for embedding in prediction])
             })
 
     with open(output_path, "w") as fh:
-        fh.write(json.dumps(results))
+        fh.write(json.dumps(results, indent=2))
