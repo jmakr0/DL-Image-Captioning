@@ -9,10 +9,10 @@ COPY . /usr/src/app
 WORKDIR /usr/src/app
 
 RUN wget https://owncloud.hpi.de/index.php/s/jevzhc3KjyPRheN/download -O glove.6B.50d_normalized.txt
-RUN wget https://owncloud.hpi.de/index.php/s/1u4V3q2T40iGZWE/download -O weights.h5
+RUN wget https://owncloud.hpi.de/index.php/s/0syos4BMwdjwevR/download -O model_resnet50_64_50.model
 
 RUN mkdir -p data/embedding && mv glove.6B.50d_normalized.txt data/embedding/
-RUN mkdir -p data/weights && mv weights.h5 data/weights/
+RUN mkdir -p data/models && mv model_resnet50_64_50.model data/models/
 RUN mkdir -p data/output
 
 RUN pip3 install -r requirements.txt
