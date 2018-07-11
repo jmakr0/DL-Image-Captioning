@@ -1,5 +1,5 @@
 embeddings:
-  glove: '/usr/src/app/data/glove.6B.50d_normalized.txt'
+  glove: '/usr/src/app/data/embedding/glove.6B.50d_normalized.txt'
 
 paths:
   annotations: '/usr/src/app/data/input/TrainVal/annotations'
