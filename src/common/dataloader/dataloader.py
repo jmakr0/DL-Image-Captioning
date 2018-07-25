@@ -53,12 +53,12 @@ class DataLoadingSequence(Sequence):
         for i, (image_metadata, caption) in enumerate(batch):
             image_path = os.path.join(self.images_dir, image_metadata['filename'])
             images[i] = self._load_image(image_path)
-            captions[i] = self.glove.embed_text(caption)
+            captions[i] = self._preprocess_captions(caption)
 
         if self._in_test_mode():
-            return images
+            return images #{'img_input': images, 'capt_input': captions}
         else:
-            return images, captions
+            return images, captions #{'img_input': images, 'capt_input': captions, 'output': captions}
 
     def _load_metadata(self):
         if self._in_test_mode():
@@ -121,6 +121,17 @@ class DataLoadingSequence(Sequence):
         result = result - 1
 
         return result
+
+    def _preprocess_captions(self, caption):
+        # get embedding vectors
+        index_sequence = self.glove.text_to_word_indices(caption, limit=self.max_caption_length)
+        word_vectors = self.glove.embedding_vectors[index_sequence]
+
+        # add zero padding
+        zero_vector = np.zeros(shape=(self.max_caption_length, self.word_embedding_size))
+        zero_vector[:len(word_vectors)] = word_vectors
+
+        return zero_vector
 
     def _in_test_mode(self):
         return self.partition == 'test'

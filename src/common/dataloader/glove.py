@@ -1,7 +1,4 @@
-import sys
-
 import numpy as np
-from scipy import spatial
 
 from src.common.dataloader import matutils
 from src.settings.settings import Settings
@@ -26,8 +23,9 @@ class Glove:
             for line_number, line in enumerate(f, 1):
                 line_split = line.strip().split()
                 word = line_split[0]
-                vector = np.array(line_split[1:], dtype=float)
+                vector = np.array(line_split[1:], dtype='float32')
 
+                # we skip the head but start the index with 0
                 self.word_numbers[word] = line_number-1
                 self.embedding_vectors[line_number-1] = vector
                 self.words[line_number-1] = word
@@ -35,19 +33,20 @@ class Glove:
                 if line_number-1 == self.dictionary_size:
                     break
 
+        # vector norm is lazy (gets computed at first call to most_similar_word()
         self.vectors_norm = None
 
-    def get_word_number(self, word):
+    def index_of_word(self, word):
         if len(self.word_numbers) == 0:
             raise Exception('No embedding loaded.')
 
-        word = word.lower()
+        word = word.strip().lower()
         if word in self.word_numbers:
             return self.word_numbers[word]
         return 0
 
-    def get_word_vector(self, word):
-        return self.embedding_vectors[self.get_word_number(word)]
+    def to_vector(self, word):
+        return self.embedding_vectors[self.index_of_word(word)]
 
     def _text_to_word_sequence(self, text):
         filters = '!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n'
@@ -59,7 +58,7 @@ class Glove:
         return [word for word in seq if word]
 
     def text_to_word_indices(self, text, limit=None):
-        vector = []
+        indices = []
 
         if isinstance(text, list):
             seq = text
@@ -72,45 +71,19 @@ class Glove:
             limit = len(seq)
 
         for i in range(limit):
-            word = seq[i]
-            vector.append(self.get_word_number(word))
+            indices.append(self.index_of_word(seq[i]))
 
-        return vector
+        return indices
 
     def embed_text(self, string):
         index_sequence = self.text_to_word_indices(string, limit=self.max_caption_length)
 
-        embedded_words = self.embedding_vectors[index_sequence]
+        word_vectors = self.embedding_vectors[index_sequence]
+        # add zero padding
         zero_vector = np.zeros(shape=(self.max_caption_length, self.word_embedding_size))
-        zero_vector[:len(embedded_words)] = embedded_words
+        zero_vector[:len(word_vectors)] = word_vectors
 
         return zero_vector
-
-    def wordembedding_to_most_similar_word(self, v_embedding):
-        # use numpy-version from gensim instead:
-        return self.most_similar_word(v_embedding)
-        """
-        most_similar_word = None
-        min_diff = sys.maxsize
-
-        # lookup for exact match (numpy vectorized operation)
-        indices = np.flatnonzero((self.embedding_vectors == v_embedding).all(1))
-        if len(indices) > 0:
-            print("found early matches: {}".format(", ".join([self.words[i] for i in indices])))
-            # just return first match
-            return self.words[indices[0]]
-
-        # if runtime too bad, see: https://github.com/RaRe-Technologies/gensim/blob/develop/gensim/models/keyedvectors.py
-        for word_number in self.word_numbers.values():
-            v_compare_embedding = self.embedding_vectors[word_number]
-
-            diff = spatial.distance.cosine(v_embedding, v_compare_embedding)
-            if diff < min_diff:
-                most_similar_word = self.words[word_number]
-                min_diff = diff
-
-        return most_similar_word
-        """
 
     def init_sims(self):
         if getattr(self, 'vectors_norm', None) is None:
