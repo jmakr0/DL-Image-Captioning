@@ -27,24 +27,24 @@ def common_callbacks(batch_size=64, make_dirs=True):
     callbacks = [
         TensorBoard(
             log_dir=tensorboard_dir,
-            histogram_freq=0,
+            histogram_freq=1,
             batch_size=batch_size,
             write_graph=True,
-            write_grads=False,
-            write_images=False),
+            write_grads=True,
+            write_images=True),
         CSVLogger(csv_log_file),
-        EarlyStopping(monitor='val_loss', patience=5, mode='auto', baseline=None),
-        ModelCheckpoint(os.path.join(
-            checkpoints_dir,
-            "weights.{epoch:02d}-{val_loss:.4f}.h5"),
-            monitor='val_loss',
-            save_best_only=True,
-            save_weights_only=True),
+        #EarlyStopping(monitor='val_loss', patience=5, mode='auto', baseline=None),
+        # ModelCheckpoint(os.path.join(
+        #     checkpoints_dir,
+        #     "weights.{epoch:02d}-{val_loss:.4f}.h5"),
+        #     monitor='val_loss',
+        #     save_best_only=True,
+        #     save_weights_only=True),
         ModelCheckpoint(os.path.join(
             checkpoints_dir,
             "model.{epoch:02d}-{val_loss:.4f}.pkl"),
             monitor='val_loss',
-            save_best_only=True,
+            save_best_only=False,
             save_weights_only=False)
     ]
     return callbacks

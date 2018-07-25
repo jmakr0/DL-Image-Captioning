@@ -1,7 +1,8 @@
 from keras.engine.saving import load_model
-from keras.layers import Input, Flatten, RepeatVector, Dense, GlobalAveragePooling2D
+from keras.layers import Input, Flatten, RepeatVector, Dense, GlobalAveragePooling2D, TimeDistributed, Add, LSTM
 from keras.models import Model
 from keras.optimizers import Adam
+from keras.regularizers import l2
 
 from keras.utils import multi_gpu_model
 
@@ -51,7 +52,7 @@ def language_model(input_tensor):
 
     x = RepeatVector(max_caption_len)(input_tensor)
     x = CustomLSTM(1024)(x)
-    x = Dense(word_embedding_size)(x)
+    x = Dense(word_embedding_size, name='output')(x)
 
     return x
 
@@ -59,12 +60,24 @@ def language_model(input_tensor):
 def create_model(cnn, gpus=None, weights_path=None):
     settings = Settings()
     img_shape = settings.get_image_dimensions()
+    max_caption_len = settings.get_max_caption_length()
+    word_embedding_size = settings.get_word_embedding_size()
+    reg = 1e-8
 
     img_input = Input(shape=img_shape, name='img_input')
     img_embedding = image_embedding(img_input, cnn=cnn)
-    x = language_model(img_embedding)
+    # img_embedding = RepeatVector(max_caption_len)(img_embedding)
 
-    model = Model(inputs=img_input, outputs=x, name='img_cap')
+    #x = language_model(img_embedding)
+    # rnn = LSTM(units=1024,
+    #            recurrent_regularizer=l2(reg),
+    #            kernel_regularizer=l2(reg),
+    #            bias_regularizer=l2(reg),
+    #            return_sequences=True,
+    #            name='lstm')(img_embedding)
+    # out = TimeDistributed(Dense(word_embedding_size), name='output')(rnn)
+
+    model = Model(inputs=img_input, outputs=img_embedding, name='img_cap')
 
     # load model weights to continue training
     if weights_path:
@@ -80,6 +93,7 @@ def create_model(cnn, gpus=None, weights_path=None):
 
 
 def load_coca_model(filename):
-    return load_model(filename, custom_objects={
-        "CustomLSTM": CustomLSTM
-    })
+    # return load_model(filename, custom_objects={
+    #     "CustomLSTM": CustomLSTM
+    # })
+    return load_model(filename)

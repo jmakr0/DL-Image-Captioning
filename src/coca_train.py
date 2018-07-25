@@ -24,6 +24,13 @@ def train(cnn, batch_size, epochs, devices=None, workers=4, mw_path=None):
         gpus = len(devices)
         print("CUDA devices specified: {}, using {} gpus".format(devices, gpus))
 
+    import tensorflow as tf
+    from tensorflow.python import debug as tf_debug
+    import keras
+
+    keras.backend.set_session(
+        tf_debug.TensorBoardDebugWrapperSession(tf.Session(), "localhost:1212"))
+
     # if weights_path is a pickled model --> load it
     try:
         model = load_coca_model(mw_path)
