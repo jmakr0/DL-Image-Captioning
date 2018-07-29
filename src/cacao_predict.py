@@ -15,7 +15,6 @@ from src.settings.settings import Settings
 
 def predict():
     K.set_learning_phase(0)
-    config = Settings()
 
     print("loading embedding")
     glove = Glove(dictionary_size=40000)

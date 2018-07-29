@@ -31,7 +31,7 @@ def common_callbacks(batch_size=64, make_dirs=True, exp_id=''):
             batch_size=batch_size,
             write_graph=True,
             write_grads=False,
-            write_images=True),
+            write_images=False),
         CSVLogger(csv_log_file),
         # EarlyStopping(monitor='val_loss', patience=5, mode='auto', baseline=None),
         ModelCheckpoint(os.path.join(
@@ -40,11 +40,11 @@ def common_callbacks(batch_size=64, make_dirs=True, exp_id=''):
             monitor='val_loss',
             save_best_only=False,
             save_weights_only=True),
-        # ModelCheckpoint(os.path.join(
-        #     checkpoints_dir,
-        #     "model.{epoch:02d}-{val_loss:.4f}.pkl"),
-        #     monitor='val_loss',
-        #     save_best_only=False,
-        #     save_weights_only=False)
+        ModelCheckpoint(os.path.join(
+            checkpoints_dir,
+            "model.{epoch:02d}-{val_loss:.4f}.pkl"),
+            monitor='val_loss',
+            save_best_only=True,
+            save_weights_only=False)
     ]
     return callbacks
