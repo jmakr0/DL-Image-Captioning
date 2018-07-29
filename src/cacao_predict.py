@@ -1,9 +1,6 @@
 # hack to make parent dir (`src` available) for import, when calling this file directly
-import sys; import os;
+import sys; import os; sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src.cacao.model import image_captioning_model
-
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import json
 
 from argparse import ArgumentParser
@@ -13,21 +10,21 @@ from keras.models import load_model
 from src.common.dataloader.dataloader import TestSequence
 from src.common.dataloader.glove import Glove
 
-from src.coca.modules.custom_lstm import CustomLSTM
 from src.settings.settings import Settings
 
 
 def predict():
     K.set_learning_phase(0)
+    config = Settings()
 
-    glove = Glove()
+    print("loading embedding")
+    glove = Glove(dictionary_size=40000)
     glove.load_embedding()
 
+    print("loading model")
     model = load_model(args.model_path)
 
-    # model = image_captioning_model(cnn='resnet50')
-    # model.load_weights(args.model_path)
-
+    print("beginning prediction on batches of size {}".format(args.batch_size))
     test_sequence = TestSequence(args.batch_size, input_caption=True)
 
     results = []
@@ -41,6 +38,7 @@ def predict():
                 "caption": cap
             })
 
+    print("saving results to file")
     with open(args.output_path, "w") as fh:
         fh.write(json.dumps(results))
 
