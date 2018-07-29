@@ -5,6 +5,8 @@ paths:
   annotations: '/dl_data/TrainVal/annotations'
   train_images: '/dl_data/TrainVal/train2014'
   val_images: '/dl_data/TrainVal/val2014'
+  test_metadata: '/dl_data/Evaluation-I'
+  test_images: '/dl_data/Evaluation-I/eval-I'
   logs: '/dl_data/logs'
   models: '/dl_data/models'
 
