@@ -60,7 +60,7 @@ class DataLoadingSequence(Sequence):
 
         self.metadata = [value for _, value in images.items()]
 
-        if self.partition == 'train' and self.shuffle:
+        if self.shuffle:
             random.shuffle(self.metadata)
 
     def __len__(self):
