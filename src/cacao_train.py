@@ -59,9 +59,9 @@ if __name__ == '__main__':
     parser.add_argument('--devices', default=[], type=int, nargs='*', help='GPUs to use')
     parser.add_argument('--cnn', default='resnet50', choices=['resnet50', 'resnet152'])
     parser.add_argument('--epochs', default=50, type=int)
-    parser.add_argument('--batch_size', default=30, type=int)
+    parser.add_argument('--batch_size', default=32, type=int)
     parser.add_argument('--lr', default=1e-3, type=float)
-    parser.add_argument('--workers', default=4, type=int)
+    parser.add_argument('--workers', default=8, type=int)
 
     # parser.add_argument('--final_submission', default='False', choices=['True', 'False'])
     args = parser.parse_args()

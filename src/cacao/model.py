@@ -1,7 +1,8 @@
 from keras import backend as K
 from keras import Model, Input
-from keras.layers import Dense, LSTM, Multiply, Concatenate, Reshape, Lambda, Flatten, AveragePooling2D
+from keras.layers import Dense, LSTM, Multiply, Concatenate, Reshape, Lambda, Flatten, AveragePooling2D, Dropout
 from keras.optimizers import Adam
+from keras.regularizers import l2
 from keras.utils import multi_gpu_model
 
 # with eval()
@@ -10,8 +11,7 @@ from src.common.modules.resnet import ResNet152Embed as resnet152
 
 
 def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_dim=50, max_caption_length=15,
-                           gpus=0, lr=1e-3):
-
+                           gpus=0, lr=1e-3, regularizer=1e-8, dropout=0.2):
     # Definition of CNN
     cnn_input = Input(shape=img_shape)
     cnn = eval(cnn)(
@@ -37,21 +37,26 @@ def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_d
     state = None
 
     # Definition of RNN
-    rnn = LSTM(1024, return_sequences=False, return_state=True)
-    attention_layer = Dense(cnn_output_len, activation='sigmoid')
-    embedding_layer1 = Dense(512, activation='relu')
-    embedding_layer2 = Dense(256, activation='relu')
-    embedding_layer3 = Dense(embedding_dim, activation='linear')
+    rnn = LSTM(1024, return_sequences=False, return_state=True,
+               dropout=dropout, recurrent_dropout=dropout,
+               recurrent_regularizer=l2(regularizer),
+               bias_regularizer=l2(regularizer),
+               kernel_regularizer=l2(regularizer))
+    attention_layer = Dense(cnn_output_len, activation='sigmoid', kernel_regularizer=l2(regularizer))
+    embedding_layer1 = Dense(512, activation='relu', kernel_regularizer=l2(regularizer))
+    embedding_layer2 = Dense(256, activation='relu', kernel_regularizer=l2(regularizer))
+    embedding_layer3 = Dense(embedding_dim, activation='tanh', kernel_regularizer=l2(regularizer))
 
     # Auxiliary layers
     multiply = Multiply()
+    dropout = Dropout(dropout)
     concatenate = Concatenate()
     reshape_rnn_in = Reshape((1, embedding_dim + cnn_output_len))
     reshape_embd_word_for_concat = Reshape((1, embedding_dim))
 
     words = []
     for i in range(max_caption_length):
-        attention_image = multiply([cnn_output, attention])
+        attention_image = dropout(multiply([cnn_output, attention]))
         rnn_in = concatenate([embd_word, attention_image])
 
         rnn_in = reshape_rnn_in(rnn_in)
