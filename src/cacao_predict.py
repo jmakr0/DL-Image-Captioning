@@ -1,9 +1,6 @@
 # hack to make parent dir (`src` available) for import, when calling this file directly
-import sys; import os;
+import sys; import os; sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from src.cacao.model import image_captioning_model
-
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import json
 
 from argparse import ArgumentParser
@@ -13,7 +10,6 @@ from keras.models import load_model
 from src.common.dataloader.dataloader import TestSequence
 from src.common.dataloader.glove import Glove
 
-from src.coca.modules.custom_lstm import CustomLSTM
 from src.settings.settings import Settings
 
 
