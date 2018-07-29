@@ -1,50 +1,44 @@
-# hack to make parent dir (`src` available) for import, when calling this file directly
-import sys; import os; sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 import json
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-from argparse import ArgumentParser
-from keras import backend as K
-from keras.models import load_model
-
-from src.common.dataloader.dataloader import TestSequence
-from src.common.dataloader.glove import Glove
+from keras.engine.saving import load_model
 
 from src.coca.modules.custom_lstm import CustomLSTM
+from src.common.dataloader.glove import Glove
+from src.common.dataloader.dataloader import TestSequence, TrainSequence
 from src.settings.settings import Settings
 
+if __name__ == "__main__":
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
-def predict():
-    K.set_learning_phase(0)
+    settings = Settings()
+    model_dir = settings.get_path('models')
+    model_path = os.path.join(model_dir, 'model_resnet50_64_50.model')
+
+    output_dir = settings.get_path('output')
+    output_path = os.path.join(output_dir, 'results.json')
 
     glove = Glove()
     glove.load_embedding()
 
-    model = load_model(args.model_path, custom_objects={'CustomLSTM': CustomLSTM})
-    test_sequence = TestSequence(args.batch_size)
+    custom_objects = {'CustomLSTM': CustomLSTM}
+
+    model = load_model(model_path, custom_objects=custom_objects)
+
+    test_sequence = TestSequence(64)
 
     results = []
-    for ids, images in test_sequence:
+    for i in range(len(test_sequence)):
+        images, ids = test_sequence[i]
         predictions = model.predict_on_batch(images)
 
-        for id_, capt in zip(ids, predictions):
-            cap = ' '.join([glove.most_similar_word(embd_word) for embd_word in capt])  # delete end words
+        for prediction, image_id in zip(predictions, ids):
             results.append({
-                "image_id": int(id_),
-                "caption": cap
+                'image_id': image_id,
+                'caption': ' '.join([glove.most_similar_word(embedding) for embedding in prediction])
             })
 
-    with open(args.output_path, "w") as fh:
-        fh.write(json.dumps(results))
-
-
-if __name__ == "__main__":
-    arg_parse = ArgumentParser()
-    arg_parse.add_argument('--model_path', default='C:/repo/DL-Image-Captioning/coca_model_resnet50_64_30.model', type=str)
-    arg_parse.add_argument('--output_path', default='C:/repo/DL-Image-Captioning/output.json', type=str)
-    arg_parse.add_argument('--settings', default='C:/repo/DL-Image-Captioning/evaluation/settings_axel.yml', type=str)
-    arg_parse.add_argument('--batch_size', type=int, default=64)
-    args = arg_parse.parse_args()
-
-    Settings.FILE = args.settings
-
-    predict()
+    with open(output_path, "w") as fh:
+        fh.write(json.dumps(results, indent=2))

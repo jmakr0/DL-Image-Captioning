@@ -16,50 +16,33 @@ class DataLoadingSequence(Sequence):
         if partition != 'train' and partition != 'val' and partition != 'test':
             raise ValueError("partition `{}` is not valid. Either specify `train` or `val`".format(partition))
 
+        self.partition = partition
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+
         settings = Settings()
 
-        self.partition = partition
-
-        if self._in_test_mode():
+        if self.test_mode:
             self.annotations_dir = settings.get_path('test_metadata')
-            self.images_dir = settings.get_path('test_images')
         else:
             self.annotations_dir = settings.get_path('annotations')
-            self.images_dir = settings.get_path("{}_images".format(partition))
+            self.word_embedding_size = settings.get_word_embedding_size()
+            self.max_caption_length = settings.get_max_caption_length()
 
-        self.word_embedding_size = settings.get_word_embedding_size()
+            self.glove = Glove()
+            self.glove.load_embedding()
+
         self.image_dimensions = settings.get_image_dimensions()
-        self.max_caption_length = settings.get_max_caption_length()
-
-        self.glove = Glove()
-        self.glove.load_embedding()
-
-        self.metadata = self._load_metadata()
-        if partition == 'train' and shuffle:
-            random.shuffle(self.metadata)
-
-        self.batch_size = batch_size
+        self.images_dir = settings.get_path("{}_images".format(partition))
         self.input_caption = input_caption
-
-    def __len__(self):
-        return int(np.floor(len(self.metadata) / float(self.batch_size)))
-
-    def __getitem__(self, index):
-        bs = self.batch_size
-        batch = self.metadata[index * bs:(index + 1) * bs]
-
         ids = np.array([image_metadata['id'] for image_metadata, _ in batch])
-        images = np.zeros(shape=(bs,) + self.image_dimensions)
-        captions = np.zeros(shape=(bs, self.max_caption_length, self.word_embedding_size))
         skip = []
 
-        for i, (image_metadata, caption) in enumerate(batch):
-            image_path = os.path.join(self.images_dir, image_metadata['filename'])
+        self._load_metadata()
             try:
                 images[i] = self._load_image(image_path)
             except:
                 skip.append(i)
-            captions[i] = self.glove.embed_text(caption)
 
         mask = np.ones_like(ids, dtype=bool)
         mask[skip] = False
@@ -68,91 +51,88 @@ class DataLoadingSequence(Sequence):
         captions = captions[mask]
         # care: batch will be smaller
 
-        if self._in_test_mode():
+        if self.test_mode():
             null_captions = np.zeros_like(captions)
             return (ids, images) if self.input_caption is False else (ids, [images, null_captions])
         else:
             return (images, captions) if self.input_caption is False else ([images, captions], captions)
 
     def _load_metadata(self):
-        if self._in_test_mode():
+        if self.test_mode:
             metadata_filepath = os.path.join(self.annotations_dir, 'input.json')
         else:
             metadata_filepath = os.path.join(self.annotations_dir, 'captions_{}2014.json'.format(self.partition))
 
-        with open(metadata_filepath, 'r') as file:
-            data = json.load(file)
+        with open(metadata_filepath, 'r') as f:
+            metadata = json.load(f)
 
-        result = []
+        images = {}
+        for image in metadata['images']:
+            images[image['id']] = {'id': image['id'], 'file_name': image['file_name']}
 
-        images_raw = data['images']
-        images_metadata = self._images_metadata(images_raw)
+        if not self.test_mode:
+            for annotation in metadata['annotations']:
+                images[annotation['image_id']]['caption'] = annotation['caption']
 
-        if self._in_test_mode():
-            for annotation_id in images_metadata.keys():
-                result.append((images_metadata[annotation_id], ''))
+        self.metadata = [value for _, value in images.items()]
+
+        if self.shuffle:
+            random.shuffle(self.metadata)
+    @property
+    def test_mode(self):
+        return self.partition == 'test'
+     
+    def __len__(self):
+        return int(np.ceil(len(self.metadata) / self.batch_size))
+
+    def __getitem__(self, index):
+        bs = self.batch_size
+        batch = self.metadata[index * bs:(index + 1) * bs]
+
+        ids = []
+        images = np.zeros(shape=(bs,) + self.image_dimensions)
+        if not self.test_mode:
+            captions = np.zeros(shape=(bs, self.max_caption_length, self.word_embedding_size))
+
+        for i, metadata in enumerate(batch):
+            ids.append(metadata['id'])
+            image_path = os.path.join(self.images_dir, metadata['file_name'])
+            images[i] = self._get_image(image_path)
+            if not self.test_mode:
+                captions[i] = self.glove.embed_text(metadata['caption'])
+
+        if self.test_mode:
+            return images, ids
         else:
-            annotations_raw = data['annotations']
-            annotations = self._annotations(annotations_raw)
+            return images, captions
 
-            for annotation_id in images_metadata.keys():
-                for annotation in annotations[annotation_id]:
-                    result.append((images_metadata[annotation_id], annotation))
-        return result
-
-    def _images_metadata(self, images_raw):
-        images_metadata = {}
-        for image in images_raw:
-            img_data = {
-                'filename': image['file_name'],
-                'width': image['width'],
-                'height': image['height'],
-                'id': image['id']
-            }
-            images_metadata[image['id']] = img_data
-        return images_metadata
-
-    def _annotations(self, annotations_raw):
-        annotations = {}
-        for annotation in annotations_raw:
-            if not annotation['image_id'] in annotations:
-                annotations[annotation['image_id']] = [annotation['caption']]
-            else:
-                annotations[annotation['image_id']].append(annotation['caption'])
-        return annotations
-
-    def _load_image(self, file_path):
+    def _get_image(self, image_path):
         if len(self.image_dimensions) == 2:
-            image = load_img(file_path, target_size=(self.image_dimensions[0], self.image_dimensions[1]),
+            image = load_img(image_path, target_size=(self.image_dimensions[0], self.image_dimensions[1]),
                              grayscale=True)
         elif len(self.image_dimensions) == 3:
-            image = load_img(file_path, target_size=(self.image_dimensions[0], self.image_dimensions[1]))
+            image = load_img(image_path, target_size=(self.image_dimensions[0], self.image_dimensions[1]))
         else:
             raise ValueError('Image shape has to be 2 or 3 dimensional.')
 
-        result = np.array(image, dtype=np.float)
+        image = np.array(image, dtype=np.float)
         # normalize
-        result = result / 255 * 2
-        result = result - 1
-        return result
+        image = image / 255 * 2
+        image = image - 1
 
-    def _in_test_mode(self):
-        return self.partition == 'test'
+        return image
 
 
 class TrainSequence(DataLoadingSequence):
-
     def __init__(self, batch_size, input_caption=False):
         super().__init__('train', batch_size, input_caption=input_caption)
 
 
 class ValSequence(DataLoadingSequence):
-
     def __init__(self, batch_size, input_caption=False):
         super().__init__('val', batch_size, input_caption=input_caption, shuffle=True)
 
 
 class TestSequence(DataLoadingSequence):
-
     def __init__(self, batch_size, input_caption=False):
         super().__init__('test', batch_size, input_caption=input_caption, shuffle=False)
