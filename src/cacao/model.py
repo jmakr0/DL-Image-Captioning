@@ -1,10 +1,11 @@
 from keras import backend as K
 from keras import Model, Input
-from keras.applications import ResNet50 as resnet50
 from keras.layers import Dense, LSTM, Multiply, Concatenate, Reshape, Lambda, Flatten, GlobalAveragePooling2D
 from keras.optimizers import Adam
 from keras.utils import multi_gpu_model
 
+# with eval()
+from keras.applications import ResNet50 as resnet50
 from src.common.modules.resnet import ResNet152Embed as resnet152
 
 
@@ -67,5 +68,5 @@ def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_d
     model = Model(inputs=[cnn_input, caption_input], outputs=caption)
     if gpus >= 2:
         model = multi_gpu_model(model, gpus=gpus)
-    model.compile(optimizer=Adam(lr=lr), loss='mean_squared_error', metrics=['mae'])
+    model.compile(optimizer=Adam(lr=lr), loss='mean_squared_error', metrics=['mae', 'acc'])
     return model
