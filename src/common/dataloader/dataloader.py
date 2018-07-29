@@ -12,13 +12,14 @@ from src.settings.settings import Settings
 
 class DataLoadingSequence(Sequence):
 
-    def __init__(self, partition, batch_size, input_caption=False, shuffle=True):
+    def __init__(self, partition, batch_size, input_caption=False, shuffle=False):
         if partition != 'train' and partition != 'val' and partition != 'test':
             raise ValueError("partition `{}` is not valid. Either specify `train` or `val`".format(partition))
 
         self.partition = partition
         self.batch_size = batch_size
         self.shuffle = shuffle
+        self.input_caption = input_caption
 
         settings = Settings()
 
@@ -34,28 +35,12 @@ class DataLoadingSequence(Sequence):
 
         self.image_dimensions = settings.get_image_dimensions()
         self.images_dir = settings.get_path("{}_images".format(partition))
-        self.input_caption = input_caption
-        ids = np.array([image_metadata['id'] for image_metadata, _ in batch])
-        skip = []
 
         self._load_metadata()
-            try:
-                images[i] = self._load_image(image_path)
-            except:
-                skip.append(i)
 
-        mask = np.ones_like(ids, dtype=bool)
-        mask[skip] = False
-        ids = ids[mask]
-        images = images[mask]
-        captions = captions[mask]
-        # care: batch will be smaller
-
-        if self.test_mode():
-            null_captions = np.zeros_like(captions)
-            return (ids, images) if self.input_caption is False else (ids, [images, null_captions])
-        else:
-            return (images, captions) if self.input_caption is False else ([images, captions], captions)
+    @property
+    def test_mode(self):
+        return self.partition == 'test'
 
     def _load_metadata(self):
         if self.test_mode:
@@ -78,10 +63,7 @@ class DataLoadingSequence(Sequence):
 
         if self.shuffle:
             random.shuffle(self.metadata)
-    @property
-    def test_mode(self):
-        return self.partition == 'test'
-     
+
     def __len__(self):
         return int(np.ceil(len(self.metadata) / self.batch_size))
 
@@ -102,9 +84,10 @@ class DataLoadingSequence(Sequence):
                 captions[i] = self.glove.embed_text(metadata['caption'])
 
         if self.test_mode:
-            return images, ids
+            null_captions = np.zeros_like(captions)
+            return (images, ids) if self.input_caption is False else (ids, [images, null_captions])
         else:
-            return images, captions
+            return (images, captions) if self.input_caption is False else ([images, captions], captions)
 
     def _get_image(self, image_path):
         if len(self.image_dimensions) == 2:
@@ -125,7 +108,7 @@ class DataLoadingSequence(Sequence):
 
 class TrainSequence(DataLoadingSequence):
     def __init__(self, batch_size, input_caption=False):
-        super().__init__('train', batch_size, input_caption=input_caption)
+        super().__init__('train', batch_size, input_caption=input_caption, shuffle=True)
 
 
 class ValSequence(DataLoadingSequence):
