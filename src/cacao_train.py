@@ -13,14 +13,6 @@ from src.settings.settings import Settings
 def train():
     """
     ToDo:
-     * test resnet152
-     * Train: final_submission. Use flickr30k to train on.
-     * Create shell scripts.
-     * Test net on my machine. Let it train.
-     * Test the output.
-     * Make it work with nvidia-docker
-     * Test on server.
-     * Make predictions on test set provided by the chair.
      * Refine model: BachNorm Layer, different LossFunctions, tune parameters/optimizers.
      * Print out loss and create diagrams.
      * More models with different behaviors. maybe one parametrized model definition
@@ -39,7 +31,8 @@ def train():
     callbacks = common_callbacks(batch_size=args.batch_size, exp_id=args.exp_id)
     os.environ['CUDA_VISIBLE_DEVICES'] = ', '.join(map(str, args.devices))
 
-    model = image_captioning_model(lr=args.lr, cnn=args.cnn, gpus=len(args.devices), img_shape=config.get_image_dimensions(),
+    model = image_captioning_model(lr=args.lr, cnn=args.cnn, gpus=len(args.devices),
+                                   img_shape=config.get_image_dimensions(),
                                    embedding_dim=config.get_word_embedding_size(),
                                    max_caption_length=config.get_max_caption_length())
     model.summary()

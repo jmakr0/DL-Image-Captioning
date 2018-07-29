@@ -1,6 +1,6 @@
 from keras import backend as K
 from keras import Model, Input
-from keras.layers import Dense, LSTM, Multiply, Concatenate, Reshape, Lambda, Flatten, GlobalAveragePooling2D
+from keras.layers import Dense, LSTM, Multiply, Concatenate, Reshape, Lambda, Flatten, AveragePooling2D
 from keras.optimizers import Adam
 from keras.utils import multi_gpu_model
 
@@ -22,18 +22,11 @@ def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_d
     )
     for layer in cnn.layers:
         layer.trainable = False
-    cnn_output = (Flatten() if cnn == 'resnet152' else GlobalAveragePooling2D())(cnn.output)
-    cnn_output_len = int(cnn_output.shape[-1])
+    cnn_output = Flatten()(cnn.output) if cnn == 'resnet152' else Flatten()(AveragePooling2D((7, 7))(cnn.output))
+    cnn_output_len = int(cnn.output.shape[-1])
 
     # Caption Input
     caption_input = Input((max_caption_length, embedding_dim))
-
-    # Definition of RNN
-    rnn = LSTM(1024, return_sequences=False, return_state=True)
-    attention_layer = Dense(cnn_output_len, activation='sigmoid')
-    embedding_layer1 = Dense(666, activation='relu')
-    embedding_layer2 = Dense(333, activation='relu')
-    embedding_layer3 = Dense(embedding_dim, activation='linear')
 
     # Start vars
     def constant(input_batch, size):
@@ -43,12 +36,25 @@ def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_d
     attention = Lambda(constant, arguments={'size': cnn_output_len})(cnn_input)
     state = None
 
+    # Definition of RNN
+    rnn = LSTM(1024, return_sequences=False, return_state=True)
+    attention_layer = Dense(cnn_output_len, activation='sigmoid')
+    embedding_layer1 = Dense(512, activation='relu')
+    embedding_layer2 = Dense(256, activation='relu')
+    embedding_layer3 = Dense(embedding_dim, activation='linear')
+
+    # Auxiliary layers
+    multiply = Multiply()
+    concatenate = Concatenate()
+    reshape_rnn_in = Reshape((1, embedding_dim + cnn_output_len))
+    reshape_embd_word_for_concat = Reshape((1, embedding_dim))
+
     words = []
     for i in range(max_caption_length):
-        attention_image = Multiply()([cnn_output, attention])
-        rnn_in = Concatenate()([embd_word, attention_image])
+        attention_image = multiply([cnn_output, attention])
+        rnn_in = concatenate([embd_word, attention_image])
 
-        rnn_in = Reshape((1, embedding_dim + cnn_output_len))(rnn_in)
+        rnn_in = reshape_rnn_in(rnn_in)
         rnn_out, hidden_state, cell_state = rnn(rnn_in, initial_state=state)
         state = [hidden_state, cell_state]
 
@@ -57,7 +63,7 @@ def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_d
         embd_word = embedding_layer3(embd_word_large)
         attention = attention_layer(rnn_out)
 
-        embd_word_concat = Reshape((1, embedding_dim))(embd_word)
+        embd_word_concat = reshape_embd_word_for_concat(embd_word)
         words.append(embd_word_concat)
         if K.learning_phase():
             embd_word = Lambda(lambda x, ii: x[:, ii], arguments={'ii': i})(caption_input)
@@ -68,5 +74,5 @@ def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_d
     model = Model(inputs=[cnn_input, caption_input], outputs=caption)
     if gpus >= 2:
         model = multi_gpu_model(model, gpus=gpus)
-    model.compile(optimizer=Adam(lr=lr), loss='mean_squared_error', metrics=['mae', 'acc'])
+    model.compile(optimizer=Adam(lr=lr), loss='mean_squared_error', metrics=['mae'])
     return model
