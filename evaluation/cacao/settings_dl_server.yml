@@ -1,12 +1,10 @@
 embeddings:
-  glove: '/home/cps8/data/glove.6B.50d_normalized.txt'
+  glove: '/home/cps8/data/glove.6B.50d.txt'
 
 paths:
   annotations: '/data/dl_lecture_data/TrainVal/annotations'
   train_images: '/data/dl_lecture_data/TrainVal/train2014'
   val_images: '/data/dl_lecture_data/TrainVal/val2014'
-  test_metadata: '/home/cps8/data/test'
-  test_images: '/home/cps8/data/test/images'
   logs: '/home/cps8/logs'
   models: '/home/cps8/models'
 

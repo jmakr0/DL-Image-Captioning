@@ -8,7 +8,7 @@ from src.settings.settings import Settings
 
 
 class Glove:
-    def __init__(self, dictionary_size=40000):
+    def __init__(self, dictionary_size=400000):
         self.dictionary_size = dictionary_size
 
         settings = Settings()
