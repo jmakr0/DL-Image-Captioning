@@ -49,7 +49,7 @@ def train():
                         callbacks=callbacks,
                         verbose=1,
                         workers=args.workers,
-                        use_multiprocessing=True,
+                        use_multiprocessing=False,
                         max_queue_size=20)
 
     model_dir = config.get_path('models')

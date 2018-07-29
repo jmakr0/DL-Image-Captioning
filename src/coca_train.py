@@ -42,7 +42,7 @@ def train(cnn, batch_size, epochs, devices=None, workers=4, mw_path=None):
                         callbacks=callbacks,
                         verbose=1,
                         workers=workers,                # workers consuming the sequence
-                        use_multiprocessing=True,       # uses multiprocessing instead of multithreading
+                        use_multiprocessing=False,       # uses multiprocessing instead of multithreading
                         max_queue_size=20)              # generator queue size
 
     settings = Settings()
