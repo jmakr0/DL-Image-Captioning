@@ -17,7 +17,7 @@ def predict():
     K.set_learning_phase(0)
 
     print("loading embedding")
-    glove = Glove(dictionary_size=40000)
+    glove = Glove(dictionary_size=400000)
     glove.load_embedding()
 
     print("loading model")
@@ -27,7 +27,8 @@ def predict():
     test_sequence = TestSequence(args.batch_size, input_caption=True)
 
     results = []
-    for ids, images in test_sequence:
+    for i in range(len(test_sequence)):
+        ids, images = test_sequence[i]
         predictions = model.predict_on_batch(images)
 
         for id_, capt in zip(ids, predictions):

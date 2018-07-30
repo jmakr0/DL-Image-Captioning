@@ -22,13 +22,13 @@ class DataLoadingSequence(Sequence):
         self.input_caption = input_caption
 
         settings = Settings()
+        self.word_embedding_size = settings.get_word_embedding_size()
+        self.max_caption_length = settings.get_max_caption_length()
 
         if self.test_mode:
             self.annotations_dir = settings.get_path('test_metadata')
         else:
             self.annotations_dir = settings.get_path('annotations')
-            self.word_embedding_size = settings.get_word_embedding_size()
-            self.max_caption_length = settings.get_max_caption_length()
 
             self.glove = Glove()
             self.glove.load_embedding()
@@ -73,19 +73,25 @@ class DataLoadingSequence(Sequence):
 
         ids = []
         images = np.zeros(shape=(bs,) + self.image_dimensions)
-        if not self.test_mode:
-            captions = np.zeros(shape=(bs, self.max_caption_length, self.word_embedding_size))
+        captions = np.zeros(shape=(bs, self.max_caption_length, self.word_embedding_size))
 
         for i, metadata in enumerate(batch):
             ids.append(metadata['id'])
             image_path = os.path.join(self.images_dir, metadata['file_name'])
-            images[i] = self._get_image(image_path)
+            try:
+                images[i] = self._get_image(image_path)
+            except FileNotFoundError:
+                print("image not found: {}".format(metadata['id']))
+                print("  use `python src/common/filter_metadata.py --input IN_JSON --output OUT_JSON --negative_image_ids {}`".format(metadata['id']))
+                print("  to clean your metadata file")
+                print("missing images lead to batches with different sizes!")
+                break
+
             if not self.test_mode:
                 captions[i] = self.glove.embed_text(metadata['caption'])
 
         if self.test_mode:
-            null_captions = np.zeros_like(captions)
-            return (images, ids) if self.input_caption is False else (ids, [images, null_captions])
+            return (images, ids) if self.input_caption is False else (ids, [images, captions])
         else:
             return (images, captions) if self.input_caption is False else ([images, captions], captions)
 
