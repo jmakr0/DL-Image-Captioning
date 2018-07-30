@@ -72,12 +72,28 @@ def main(input_file, output_file, dimensions, vocab_size, norm_type):
 
 
 if __name__ == "__main__":
-    arg_parse = ArgumentParser()
-    arg_parse.add_argument('--input', type=str)
-    arg_parse.add_argument('--output', type=str)
-    arg_parse.add_argument('--dimensions', type=int, default=DIMENSIONS)
-    arg_parse.add_argument('--vocab_size', type=int, default=WORD_NUMBER)
-    arg_parse.add_argument('--type', default='minmax', type=str, choices=type_switcher.keys())
+    arg_parse = ArgumentParser(description="Normalizes / Standardizes the word embedding vectors " +
+                                           "for the glove embedding using min-max-scaling or " +
+                                           "student-Z standardization.")
+    arg_parse.add_argument('--dimensions',
+                           type=int,
+                           default=DIMENSIONS,
+                           help="dimensionality of the embedding vector")
+    arg_parse.add_argument('--vocab_size',
+                           type=int,
+                           default=WORD_NUMBER,
+                           help="size of the vocabulary")
+    arg_parse.add_argument('--type',
+                           type=str,
+                           default='minmax',
+                           choices=type_switcher.keys(),
+                           help="type of the normalization to perform on the vectors")
+    arg_parse.add_argument('input',
+                           type=str,
+                           help="filepath to original glove word embedding file")
+    arg_parse.add_argument('output',
+                           type=str,
+                           help="filepath, where the normalized glove embedding should be saved to")
     args = arg_parse.parse_args()
 
     main(args.input, args.output, args.dimensions, args.vocab_size, args.type)

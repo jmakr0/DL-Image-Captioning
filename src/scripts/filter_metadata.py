@@ -38,10 +38,19 @@ def main(input_file, output_file, filter_list):
 
 
 if __name__ == "__main__":
-    arg_parse = ArgumentParser()
-    arg_parse.add_argument('--input', type=str)
-    arg_parse.add_argument('--output', type=str)
-    arg_parse.add_argument('--negative_image_ids', default=[], type=int, nargs='*', help='Image IDs to filter out')
+    arg_parse = ArgumentParser(description="Filters out specific annotations and images " +
+                                           "from the metadata file based on image IDs.")
+    arg_parse.add_argument('--negative_image_ids',
+                           default=[],
+                           type=int,
+                           nargs='*',
+                           help='Image IDs to filter out')
+    arg_parse.add_argument('input',
+                           type=str,
+                           help="filepath to the original metadata file")
+    arg_parse.add_argument('output',
+                           type=str,
+                           help="filepath, where the result metadata should be saved to")
     args = arg_parse.parse_args()
 
     main(args.input, args.output, args.negative_image_ids)
