@@ -1,19 +1,32 @@
-from dataloader import DataLoader
-# =================================
-# This is an example of how to use the class dataloader
-# on the server
-# =================================
+from src.common.dataloader.dataloader import TrainSequence
 
-root_dir = '/Users/nils/Desktop/test'
+# fix settings file
+from src.settings.settings import Settings
 
-args_dict = {'capture_dir': root_dir + '/annotations',
-             'train_images_dir': root_dir + '/train2014',
-             'val_images_dir': root_dir + '/val2014'}
+WORKER = 3
+N = 1000
 
-batch_size = 2
+Settings.FILE = "../../settings/settings-sebastian.yml"
 
-dl = DataLoader(args_dict)
-train_gen = dl.generator('train', batch_size)
+if __name__ == "__main__":
+    sequence = TrainSequence(32, input_caption=False)
+    iterations = N #len(sequence)
 
-for x in train_gen:
-    print(x)
+
+    print("using keras utils enqueuer")
+    from keras.utils import OrderedEnqueuer
+    enq = OrderedEnqueuer(sequence, use_multiprocessing=True, shuffle=False)
+    print("starting enqueuer")
+    enq.start(WORKER, 20)
+
+    batches = 0
+    while batches < iterations:
+        batch = enq.get()
+        next(batch)
+        batches += 1
+
+        if batches % 100 == 0:
+            print("Processed {} batches".format(batches))
+
+    print("stopping enqueuer")
+    enq.stop(1.5)
