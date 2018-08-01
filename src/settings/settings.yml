@@ -10,11 +10,6 @@ paths:
   logs: '/usr/src/app/data/logs'
   models: '/usr/src/app/data/models'
 
-  weights: '/usr/src/app/data/weights'
-  output: '/usr/src/app/data/output'
-
-
-
 image_dimensions: [224, 224, 3]
 
 word_embedding_size: 50
