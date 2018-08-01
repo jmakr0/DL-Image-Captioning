@@ -5,13 +5,20 @@ from keras.callbacks import TensorBoard, CSVLogger, EarlyStopping, ModelCheckpoi
 from src.settings.settings import Settings
 
 
-def common_callbacks(batch_size=64, make_dirs=True, exp_id=''):
+def callbacks(batch_size=64, make_dirs=True, exp_id=''):
+    """
+    Initializes callbacks and returns them.
+    :param batch_size: need for tensorboard callback
+    :param make_dirs: if true creates all directories for the log files
+    :param exp_id: differentiates different runs, so logs are not overwritten
+    :return: list of callbacks
+    """
     settings = Settings()
     log_dir = settings.get_path('logs')
 
-    tensorboard_dir = os.path.join(log_dir, exp_id + 'tensorboard')
-    checkpoints_dir = os.path.join(log_dir, exp_id + 'model_checkpoints')
-    csv_log_file = os.path.join(log_dir, exp_id + 'metrics_log.csv')
+    tensorboard_dir = os.path.join(log_dir, exp_id, 'tensorboard')
+    checkpoints_dir = os.path.join(log_dir, exp_id, 'model_checkpoints')
+    csv_log_file = os.path.join(log_dir, exp_id, 'metrics_log.csv')
 
     # create log folders
     if make_dirs:
@@ -24,7 +31,7 @@ def common_callbacks(batch_size=64, make_dirs=True, exp_id=''):
         except OSError:
             pass
 
-    callbacks = [
+    cbs = [
         TensorBoard(
             log_dir=tensorboard_dir,
             histogram_freq=0,
@@ -47,4 +54,4 @@ def common_callbacks(batch_size=64, make_dirs=True, exp_id=''):
             save_best_only=True,
             save_weights_only=False)
     ]
-    return callbacks
+    return cbs

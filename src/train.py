@@ -5,7 +5,7 @@ import numpy as np
 from keras import backend as K
 
 from src.cacao.model import image_captioning_model
-from src.common.callbacks import common_callbacks
+from src.common.callbacks import callbacks
 from src.common.dataloader.dataloader import TrainSequence, ValSequence
 from src.settings.settings import Settings
 
@@ -28,7 +28,7 @@ def train():
     val_sequence = ValSequence(args.batch_size, input_caption=True)
 
     config = Settings()
-    callbacks = common_callbacks(batch_size=args.batch_size, exp_id=args.exp_id)
+    callbacks = callbacks(batch_size=args.batch_size, exp_id=args.exp_id)
     os.environ['CUDA_VISIBLE_DEVICES'] = ', '.join(map(str, args.devices))
 
     model = image_captioning_model(lr=args.lr, cnn=args.cnn, gpus=len(args.devices),

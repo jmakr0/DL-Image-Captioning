@@ -17,4 +17,4 @@ RUN mkdir -p data/output
 
 RUN pip3 install -r requirements.txt
 
-CMD [ "python3", "./src/coca_predict.py"]
+CMD [ "python3", "./src/predict.py"]
