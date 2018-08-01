@@ -5,12 +5,12 @@ import numpy as np
 from keras import backend as K
 
 from src.cacao.model import image_captioning_model
-from src.common.callbacks import callbacks
+from src.common.callbacks import common_callbacks
 from src.common.dataloader.dataloader import TrainSequence, ValSequence
 from src.settings.settings import Settings
 
 
-def train():
+def train(args):
     """
     ToDo:
      * Refine model: BachNorm Layer, different LossFunctions, tune parameters/optimizers.
@@ -28,7 +28,7 @@ def train():
     val_sequence = ValSequence(args.batch_size, input_caption=True)
 
     config = Settings()
-    callbacks = callbacks(batch_size=args.batch_size, exp_id=args.exp_id)
+    callbacks = common_callbacks(batch_size=args.batch_size, exp_id=args.exp_id)
     os.environ['CUDA_VISIBLE_DEVICES'] = ', '.join(map(str, args.devices))
 
     model = image_captioning_model(lr=args.lr, cnn=args.cnn, gpus=len(args.devices),
@@ -48,26 +48,50 @@ def train():
     model_dir = config.get_path('models')
     model_path = os.path.join(model_dir, f'model{args.exp_id}_{args.cnn}_{args.batch_size}_{args.epochs}.model')
 
-    model.save_weights(model_path + '_weights')
+    model.save_weights(model_path + '.weights')
     model.save(model_path)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Say hello')
-    parser.add_argument('--exp_id', default=str(np.random.randint(20, 1000)), type=str)
-    parser.add_argument('--settings', default=None, type=str)
-    parser.add_argument('--devices', default=[], type=int, nargs='*', help='GPUs to use')
-    parser.add_argument('--cnn', default='resnet50', choices=['resnet50', 'resnet152'])
-    parser.add_argument('--epochs', default=50, type=int)
-    parser.add_argument('--batch_size', default=32, type=int)
-    parser.add_argument('--lr', default=1e-3, type=float)
-    parser.add_argument('--workers', default=8, type=int)
+    parser = argparse.ArgumentParser(description='Starts the training of the `cacao` model')
+
+    parser.add_argument('--exp_id',
+                        type=str,
+                        default=str(np.random.randint(20, 1000)),
+                        help="experiment ID for saving logs")
+    parser.add_argument('--devices',
+                        type=int, nargs='*',
+                        default=[],
+                        help='IDs of the GPUs to use, starting from 0')
+    parser.add_argument('--cnn',
+                        type=str, choices=['resnet50', 'resnet152'],
+                        default='resnet50',
+                        help="type of CNN to use as image feature extractor")
+    parser.add_argument('--epochs',
+                        type=int,
+                        default=50,
+                        help="trainings stops after this number of epochs")
+    parser.add_argument('--batch_size',
+                        type=int,
+                        default=32,
+                        help="batch size as power of 2; if multiple GPUs are used the batch is divided between them")
+    parser.add_argument('--lr',
+                        type=float,
+                        default=1e-3,
+                        help="learning rate for the optimization algorithm")
+    parser.add_argument('--workers',
+                        type=int,
+                        default=8,
+                        help="number of worker-threads to use for data preprocessing and loading")
+    parser.add_argument('settings',
+                        type=str,
+                        help="filepath to the configuration file")
 
     # parser.add_argument('--final_submission', default='False', choices=['True', 'False'])
-    args = parser.parse_args()
+    arguments = parser.parse_args()
 
-    if not os.path.isfile(args.settings):
-        raise FileNotFoundError(f'Settings under {args.settings} do not exist.')
-    Settings.FILE = args.settings
+    if not os.path.isfile(arguments.settings):
+        raise FileNotFoundError(f'Settings under {arguments.settings} do not exist.')
+    Settings.FILE = arguments.settings
 
-    train()
+    train(arguments)

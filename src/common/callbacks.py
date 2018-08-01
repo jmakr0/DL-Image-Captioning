@@ -5,7 +5,7 @@ from keras.callbacks import TensorBoard, CSVLogger, EarlyStopping, ModelCheckpoi
 from src.settings.settings import Settings
 
 
-def callbacks(batch_size=64, make_dirs=True, exp_id=''):
+def common_callbacks(batch_size=64, make_dirs=True, exp_id=''):
     """
     Initializes callbacks and returns them.
     :param batch_size: need for tensorboard callback
@@ -31,7 +31,7 @@ def callbacks(batch_size=64, make_dirs=True, exp_id=''):
         except OSError:
             pass
 
-    cbs = [
+    callbacks = [
         TensorBoard(
             log_dir=tensorboard_dir,
             histogram_freq=0,
@@ -54,4 +54,4 @@ def callbacks(batch_size=64, make_dirs=True, exp_id=''):
             save_best_only=True,
             save_weights_only=False)
     ]
-    return cbs
+    return callbacks
