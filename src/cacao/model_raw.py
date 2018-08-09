@@ -32,10 +32,10 @@ def image_captioning_model_raw(img_shape=(224, 224, 3), cnn='resnet152', embeddi
         rnn_out, hidden_state, cell_state = rnn(rnn_in, initial_state=state)
 
         # update vars
-        embd_word = reshape_embd_word_for_concat(rnn_out)
+        embd_word = rnn_out
 
         state = [hidden_state, cell_state]
-        words.append(rnn_in)
+        words.append(reshape_embd_word_for_concat(embd_word))
 
         if K.learning_phase():
             embd_word = C.replace_embedding_word_during_training(i)(caption_input)
