@@ -1,6 +1,19 @@
 # DL-Image-Captioning
 Project for "Competitive Problem Solving with Deep Learning" at the Hasso-Plattner Institute.
 
+## Development Requirements
+
+**OS-level packages:**
+
+**Python packages:**
+
+See file `requirements.txt` for all python packages with their needed version.
+Install all the requirements with:
+
+```bash
+pip install -r requirements.txt
+```
+
 ## Docker
 
 Build the image locally:
