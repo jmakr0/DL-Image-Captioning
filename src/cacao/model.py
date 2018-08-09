@@ -15,6 +15,7 @@ def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_d
     caption_input = Input((max_caption_length, embedding_dim))
 
     # Definition of RNN
+    # TODO: friedrich: We probably have to change the units down to a more feasible value
     rnn = C.lstm_generator(1024, dropout=dropout, l2_reg=regularizer)
     attention_layer = C.dense_attention_layer(cnn_output_len, l2_reg=regularizer)
     embedding = C.three_layer_word_embedding(512, 256, embedding_dim, l2_reg=regularizer)
