@@ -1,8 +1,6 @@
-from keras import Model, Input
+from keras import Input
 from keras import backend as K
 from keras.layers import Dense, Concatenate, Reshape
-from keras.optimizers import Adam
-from keras.utils import multi_gpu_model
 
 import src.cacao.model_commons as C
 
@@ -44,9 +42,5 @@ def image_captioning_model_raw(img_shape=(224, 224, 3), cnn='resnet152', embeddi
 
     caption = Concatenate(axis=1)(words)
 
-    # Assemble Model
-    model = Model(inputs=[cnn_input, caption_input], outputs=caption)
-    if gpus >= 2:
-        model = multi_gpu_model(model, gpus=gpus)
-    model.compile(optimizer=Adam(lr=lr), loss='mean_squared_error', metrics=['mae'])
-    return model
+    # Assemble and Return Model
+    return C.create_compile_model([cnn_input, caption_input], caption, gpus=gpus, lr=lr, loss='mean_squared_error')
