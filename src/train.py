@@ -5,23 +5,31 @@ import numpy as np
 from keras import backend as K
 
 from src.cacao.model import image_captioning_model
+from src.cacao.model_image_loop import image_captioning_model_image_loop
+from src.cacao.model_raw import image_captioning_model_raw
 from src.common.callbacks import common_callbacks
 from src.common.dataloader.dataloader import TrainSequence, ValSequence
 from src.settings.settings import Settings
+
+type_switcher = {
+    'full': image_captioning_model,
+    'image_loop': image_captioning_model_image_loop,
+    'raw': image_captioning_model_raw
+}
 
 
 def train(args):
     """
     ToDo:
-     * Refine model: BachNorm Layer, different LossFunctions, tune parameters/optimizers.
+     * Refine model: BatchNorm Layer, different LossFunctions, tune parameters/optimizers.
      * Print out loss and create diagrams.
-     * More models with different behaviors. maybe one parametrized model definition
      * Experiments on all models.
      * Think about project structure.
 
      * max caption len in train data -> 37
-     * Review: clip attention
+     * Review: clip attention, image feature vector size
     """
+
     K.set_learning_phase(1)
 
     train_sequence = TrainSequence(args.batch_size, input_caption=True)
@@ -31,10 +39,10 @@ def train(args):
     callbacks = common_callbacks(batch_size=args.batch_size, exp_id=args.exp_id)
     os.environ['CUDA_VISIBLE_DEVICES'] = ', '.join(map(str, args.devices))
 
-    model = image_captioning_model(lr=args.lr, cnn=args.cnn, gpus=len(args.devices),
-                                   img_shape=config.get_image_dimensions(),
-                                   embedding_dim=config.get_word_embedding_size(),
-                                   max_caption_length=config.get_max_caption_length())
+    model = type_switcher.get(args.model_type)(lr=args.lr, cnn=args.cnn, gpus=len(args.devices),
+                                               img_shape=config.get_image_dimensions(),
+                                               embedding_dim=config.get_word_embedding_size(),
+                                               max_caption_length=config.get_max_caption_length())
     model.summary()
     model.fit_generator(train_sequence,
                         epochs=args.epochs,
@@ -83,6 +91,10 @@ if __name__ == '__main__':
                         type=int,
                         default=8,
                         help="number of worker-threads to use for data preprocessing and loading")
+    parser.add_argument('--model_type',
+                        type=str,
+                        default='full', choices=type_switcher.keys(),
+                        help="selects model to train with growing capabilities")
     parser.add_argument('settings',
                         type=str,
                         help="filepath to the configuration file")
