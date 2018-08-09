@@ -13,7 +13,7 @@ from src.common.dataloader.glove import Glove
 from src.settings.settings import Settings
 
 
-def predict():
+def predict(args):
     K.set_learning_phase(0)
 
     print("loading embedding")
@@ -44,13 +44,25 @@ def predict():
 
 
 if __name__ == "__main__":
-    arg_parse = ArgumentParser()
-    arg_parse.add_argument('--model_path', default='C:/repo/DL-Image-Captioning/model3_resnet50_64_55.model', type=str)
-    arg_parse.add_argument('--output_path', default='C:/repo/DL-Image-Captioning/output_cacao_3.json', type=str)
-    arg_parse.add_argument('--settings', default='C:/repo/DL-Image-Captioning/evaluation/settings_axel.yml', type=str)
-    arg_parse.add_argument('--batch_size', type=int, default=3)
-    args = arg_parse.parse_args()
+    arg_parse = ArgumentParser(description="Uses a saved model to generate captions for pictures in a batch." +
+                                           "Writes the results into a JSON-file.")
+    arg_parse.add_argument('--batch_size',
+                           type=int,
+                           default=8,
+                           help="batch size to make the predictions")
+    arg_parse.add_argument('model_path',
+                           type=str,
+                           help="filepath of the saved `cacao` model to use for generating captions")
+    arg_parse.add_argument('output_path',
+                           type=str,
+                           help="filepath, where the output JSON should be written to")
+    arg_parse.add_argument('settings',
+                           type=str,
+                           help="filepath to the configuration file, that was also used for training!")
+    arguments = arg_parse.parse_args()
 
-    Settings.FILE = args.settings
+    if not os.path.isfile(arguments.settings):
+        raise FileNotFoundError(f'Settings under {arguments.settings} do not exist.')
+    Settings.FILE = arguments.settings
 
-    predict()
+    predict(arguments)

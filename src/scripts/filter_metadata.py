@@ -44,7 +44,7 @@ if __name__ == "__main__":
                            default=[],
                            type=int,
                            nargs='*',
-                           help='Image IDs to filter out')
+                           help='image IDs to filter out')
     arg_parse.add_argument('input',
                            type=str,
                            help="filepath to the original metadata file")
