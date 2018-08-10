@@ -2,14 +2,14 @@ import os; import sys; sys.path.append(os.path.join(os.path.dirname(__file__), '
 
 from src.common.evaluation.pycocoevalcap.eval import COCOEvalCap
 from src.common.evaluation.pycocotools.coco import COCO
+from src.common.evaluation.get_stanford_models import get_stanford_models
 
-import subprocess
 import argparse
 
 
 def evaluate(gt_path, prediction_path):
     # get stanford nltk data
-    subprocess.call(['./get_stanford_models.sh'])
+    print("Stanford Model Download code:", get_stanford_models())
 
     # create ground truth coco object and load results
     coco_gt = COCO(gt_path)
