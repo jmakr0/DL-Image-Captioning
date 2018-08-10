@@ -9,7 +9,9 @@ import argparse
 
 def evaluate(gt_path, prediction_path):
     # get stanford nltk data
-    print("Stanford Model Download code:", get_stanford_models())
+    exit_code = get_stanford_models()
+    if exit_code != 0:
+        raise RuntimeError("Stanford Model Download was not successful. Please check log output.")
 
     # create ground truth coco object and load results
     coco_gt = COCO(gt_path)
