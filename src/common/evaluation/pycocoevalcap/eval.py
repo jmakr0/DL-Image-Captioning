@@ -15,10 +15,10 @@ class COCOEvalCap:
         self.img2eval = {}
         self.coco = coco
         self.coco_res = coco_res
-        self.params = {'image_id': coco.get_img_ids()}
+        self.params = {'img_ids': coco_res.get_img_ids()}
 
     def evaluate(self):
-        img_ids = self.params['image_id']
+        img_ids = self.params['img_ids']
         # img_ids = self.coco.get_img_ids()
         gts = {}
         res = {}
