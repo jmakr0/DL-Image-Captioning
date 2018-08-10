@@ -6,7 +6,6 @@ SPICELIB=pycocoevalcap/spice/lib
 JAR=stanford-corenlp-3.6.0
 
 DIR="$( cd "$(dirname "$0")" ; pwd -P )"
-echo "Working directory: $DIR"
 cd "$DIR"
 
 if [ -f $SPICELIB/$JAR.jar ]; then
