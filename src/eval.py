@@ -15,11 +15,11 @@ def evaluate(gt_path, prediction_path):
 
     # create ground truth coco object and load results
     coco_gt = COCO(gt_path)
-    coco_dt = coco_gt.loadRes(prediction_path)
+    coco_dt = coco_gt.load_res(prediction_path)
 
     # consider only n images
     n = 10
-    img_ids = sorted(coco_gt.getImgIds())
+    img_ids = sorted(coco_gt.get_img_ids())
     img_ids = img_ids[0:n]
 
     # evaluate results
