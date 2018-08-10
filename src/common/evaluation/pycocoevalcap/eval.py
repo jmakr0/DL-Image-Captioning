@@ -29,7 +29,7 @@ class COCOEvalCap:
         # =================================================
         print('tokenization...')
         tokenizer = PTBTokenizer()
-        gts  = tokenizer.tokenize(gts)
+        gts = tokenizer.tokenize(gts)
         res = tokenizer.tokenize(res)
 
         # =================================================
@@ -37,11 +37,11 @@ class COCOEvalCap:
         # =================================================
         print('setting up scorers...')
         scorers = [
-            (Bleu(4), ["Bleu_1", "Bleu_2", "Bleu_3", "Bleu_4"]),
-            (Meteor(),"METEOR"),
-            (Rouge(), "ROUGE_L"),
-            (Cider(), "CIDEr"),
-            (Spice(), "SPICE")
+            (Bleu(4),  ["Bleu_1", "Bleu_2", "Bleu_3", "Bleu_4"]),
+            # (Meteor(), "METEOR"),  # does currently not work (some subprocess communication issues)
+            (Rouge(),  "ROUGE_L"),
+            (Cider(),  "CIDEr"),
+            (Spice(),  "SPICE")
         ]
 
         # =================================================

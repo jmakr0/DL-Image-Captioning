@@ -82,3 +82,12 @@ python src/script/weights2model.py weights.h5 model.pkl
 
 You can use the flag `-p` to plot the model as a `.png`-picture under the name `cacao_model.png`.
 For this to work, you must have installed `pydot` and [Graphviz](https://www.graphviz.org/).
+
+## Known Problems
+
+- If you want to use METEOR scores, the whole repo must be located in a path without spaces.
+  The METEOR scorer is written in Java and creates a file path URL relative to its location pointing to a data file.
+  The file path is urlencoded twice in the Java code and therefore leads to an exception because it can not find the data file.
+  This can only be avoided by not using any space or other special characters in the file path to the JAR file of the scorer.
+
+- METEOR scoring currently does not work, because of subprocess communication issues with the Java code.
