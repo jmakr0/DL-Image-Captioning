@@ -1,12 +1,11 @@
 from __future__ import division
-import os
-import sys
-import subprocess
-import threading
+
 import json
-import numpy as np
-import ast
+import os
+import subprocess
 import tempfile
+
+import numpy as np
 
 # Assumes spice.jar is in the same directory as spice.py.  Change as needed.
 SPICE_JAR = 'spice-1.0.jar'
