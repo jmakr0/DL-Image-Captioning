@@ -28,6 +28,28 @@ Upload the container to dockerhub:
 
 ``bash docker/push_to_dockerhub.sh``
 
+## Usage
+
+### Training
+
+### Prediction
+
+### Evaluation
+
+After generating the prediction as a JSON file, you can evaluate your results with the `eval.py` script.
+It uses the MSCOCO evaluation codes:
+- Bleu
+- Meteor (**currently broken**)
+- Rouge-L
+- CIDEr
+- SPICE
+
+You can find more information about the usage of the script by running
+```bash
+python src/eval.py --help
+```
+and about the implemented scores in the [README file](./src/common/evaluation/README.md) of the evaluation module.
+
 ## Helper scripts
 
 This project comes with some scripts that help dealing with the data used for prediction and training of the machine learning models.
@@ -44,7 +66,7 @@ You can use it like that:
 
 ```bash
 python src/scripts/glove_normalization.py \
-  --type '<studentz|minmax>'
+  --type '<studentz|minmax>' \
   orig_glove.txt normalized_glove.txt
 ```
 
@@ -62,7 +84,7 @@ Usage:
 
 ```bash
 python src/scripts/filter_metadata.py \
-  --negative_image_ids 1234 5678
+  --negative_image_ids 1234 5678 \
   orig_metadata.json cleaned_metadata.json
 
 ```
