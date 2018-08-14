@@ -54,7 +54,7 @@ def train(args):
                         max_queue_size=20)
 
     model_dir = config.get_path('models')
-    model_path = os.path.join(model_dir, f'model{args.exp_id}_{args.cnn}_{args.batch_size}_{args.epochs}.model')
+    model_path = os.path.join(model_dir, 'model{}_{}_{}_{}.model'.format(args.exp_id, args.cnn, args.batch_size, args.epochs))
 
     model.save_weights(model_path + '.weights')
     model.save(model_path)
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     arguments = parser.parse_args()
 
     if not os.path.isfile(arguments.settings):
-        raise FileNotFoundError(f'Settings under {arguments.settings} do not exist.')
+        raise FileNotFoundError('Settings under {} do not exist.'.format(arguments.settings))
     Settings.FILE = arguments.settings
 
     train(arguments)

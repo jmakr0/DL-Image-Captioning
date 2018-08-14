@@ -56,7 +56,7 @@ if __name__ == "__main__":
     args = arg_parse.parse_args()
 
     if not os.path.isfile(args.settings):
-        raise FileNotFoundError(f'Settings under {args.settings} do not exist.')
+        raise FileNotFoundError('Settings under {} do not exist.'.format(arguments.settings))
     Settings.FILE = args.settings
 
     main(args.input, args.output, args.cnn, args.plot)

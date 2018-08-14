@@ -62,7 +62,7 @@ if __name__ == "__main__":
     arguments = arg_parse.parse_args()
 
     if not os.path.isfile(arguments.settings):
-        raise FileNotFoundError(f'Settings under {arguments.settings} do not exist.')
+        raise FileNotFoundError('Settings under {} do not exist.'.format(arguments.settings))
     Settings.FILE = arguments.settings
 
     predict(arguments)
