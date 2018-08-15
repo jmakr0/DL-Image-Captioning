@@ -4,6 +4,7 @@ Microsoft COCO Caption Evaluation
 Evaluation codes for MS COCO caption generation.
 This is obtained from [tylin/coco-caption](https://github.com/tylin/coco-caption).
 See licence under [license.txt](license.txt).
+The original source code was ported to Python 3 and cleaned up.
 
 ## Requirements ##
 - java 1.8.0
@@ -24,6 +25,7 @@ See licence under [license.txt](license.txt).
 ./pycocoevalcap: The folder where all evaluation codes are stored.
 - evals.py: The file includes COCOEavlCap class that can be used to evaluate results on COCO.
 - tokenizer: Python wrapper of Stanford CoreNLP PTBTokenizer
+- scorer.py: Abstract class `Scorer` defining scorer interface for evaluation codes
 - bleu: Bleu evalutation codes
 - meteor: Meteor evaluation codes
 - rouge: Rouge-L evaluation codes
@@ -51,6 +53,9 @@ See licence under [license.txt](license.txt).
 - Hao Fang (University of Washington)
 - Tsung-Yi Lin (Cornell)
 - Ramakrishna Vedantam (Virgina Tech)
+
+Port to Python3 and code cleanup:
+- Sebastian Schmidl (Hasso Plattner Institute, University of Potsdam)
 
 ## Acknowledgement ##
 - David Chiang (University of Norte Dame)
