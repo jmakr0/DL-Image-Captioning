@@ -8,20 +8,22 @@
 # Authors: Ramakrishna Vedantam <vrama91@vt.edu> and Tsung-Yi Lin <tl483@cornell.edu>
 
 from .cider_scorer import CiderScorer
+from ..scorer import Scorer
 
 
-class Cider:
+class Cider(Scorer):
     """
     Main Class to compute the CIDEr metric 
 
     """
+
     def __init__(self, test=None, refs=None, n=4, sigma=6.0):
         # set cider to sum over 1 to 4-grams
         self._n = n
         # set the standard deviation parameter for gaussian penalty
         self._sigma = sigma
 
-    def compute_score(self, gts, res):
+    def __call__(self, gts, res):
         """
         Main function to compute CIDEr score
         :param  hypo_for_image (dict) : dictionary with key <image> and value <tokenized hypothesis / candidate sentence>
@@ -49,6 +51,3 @@ class Cider:
         (score, scores) = cider_scorer.compute_score()
 
         return score, scores
-
-    def method(self):
-        return "CIDEr"

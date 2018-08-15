@@ -7,11 +7,13 @@ import os
 import subprocess
 import threading
 
-# Assumes meteor-1.5.jar is in the same directory as meteor.py.  Change as needed.
-METEOR_JAR = 'meteor-1.5.jar'
-# print METEOR_JAR
+from ..scorer import Scorer
 
-class Meteor:
+# meteor-1.5.jar is in the same directory as meteor.py - provided with source code
+METEOR_JAR = 'meteor-1.5.jar'
+
+
+class Meteor(Scorer):
 
     def __init__(self):
         self.meteor_cmd = ['java', '-jar', '-Xmx2G', METEOR_JAR,
@@ -24,7 +26,7 @@ class Meteor:
         # Used to guarantee thread safety
         self.lock = threading.Lock()
 
-    def compute_score(self, gts, res):
+    def __call__(self, gts, res):
         assert(gts.keys() == res.keys())
         imgIds = gts.keys()
         scores = []
@@ -43,9 +45,6 @@ class Meteor:
         self.lock.release()
 
         return score, scores
-
-    def method(self):
-        return "METEOR"
 
     def _stat(self, hypothesis_str, reference_list):
         # SCORE ||| reference 1 words ||| reference n words ||| hypothesis words

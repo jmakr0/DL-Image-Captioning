@@ -9,16 +9,18 @@
 # Authors : Hao Fang <hfang@uw.edu> and Tsung-Yi Lin <tl483@cornell.edu>
 
 from .bleu_scorer import BleuScorer
+from ..scorer import Scorer
 
 
-class Bleu:
+class Bleu(Scorer):
+
     def __init__(self, n=4):
-        # default compute Blue score up to 4
+        # default compute Bleu score up to 4
         self._n = n
         self._hypo_for_image = {}
         self.ref_for_image = {}
 
-    def compute_score(self, gts, res):
+    def __call__(self, gts, res):
 
         assert(gts.keys() == res.keys())
         imgIds = gts.keys()
@@ -42,6 +44,3 @@ class Bleu:
 
         # return (bleu, bleu_info)
         return score, scores
-
-    def method(self):
-        return "Bleu"

@@ -9,6 +9,8 @@
 
 import numpy as np
 
+from ..scorer import Scorer
+
 
 def my_lcs(string, sub):
     """
@@ -19,25 +21,26 @@ def my_lcs(string, sub):
 
     Note: my_lcs only gives length of the longest common subsequence, not the actual LCS
     """
-    if(len(string)< len(sub)):
+    if len(string) < len(sub):
         sub, string = string, sub
 
-    lengths = [[0 for i in range(0,len(sub)+1)] for j in range(0,len(string)+1)]
+    lengths = [[0 for _ in range(0, len(sub)+1)] for _ in range(0, len(string)+1)]
 
-    for j in range(1,len(sub)+1):
-        for i in range(1,len(string)+1):
-            if(string[i-1] == sub[j-1]):
+    for j in range(1, len(sub)+1):
+        for i in range(1, len(string)+1):
+            if string[i-1] == sub[j-1]:
                 lengths[i][j] = lengths[i-1][j-1] + 1
             else:
-                lengths[i][j] = max(lengths[i-1][j] , lengths[i][j-1])
+                lengths[i][j] = max(lengths[i-1][j], lengths[i][j-1])
 
     return lengths[len(string)][len(sub)]
 
-class Rouge():
+
+class Rouge(Scorer):
     '''
     Class for computing ROUGE-L score for a set of candidate sentences for the MS COCO test set
-
     '''
+
     def __init__(self):
         # vrama91: updated the value below based on discussion with Hovey
         self.beta = 1.2
@@ -49,14 +52,14 @@ class Rouge():
         :param refs: list of str : COCO reference sentences for the particular image to be evaluated
         :returns score: int (ROUGE-L score for the candidate evaluated against references)
         """
-        assert(len(candidate)==1)	
-        assert(len(refs)>0)         
+        assert(len(candidate) == 1)
+        assert(len(refs) > 0)
         prec = []
         rec = []
 
         # split into tokens
         token_c = candidate[0].split(" ")
-    	
+
         for reference in refs:
             # split into tokens
             token_r = reference.split(" ")
@@ -68,13 +71,13 @@ class Rouge():
         prec_max = max(prec)
         rec_max = max(rec)
 
-        if(prec_max!=0 and rec_max !=0):
+        if prec_max != 0 and rec_max != 0:
             score = ((1 + self.beta**2)*prec_max*rec_max)/float(rec_max + self.beta**2*prec_max)
         else:
             score = 0.0
         return score
 
-    def compute_score(self, gts, res):
+    def __call__(self, gts, res):
         """
         Computes Rouge-L score given a set of reference and candidate sentences for the dataset
         Invoked by evaluate_captions.py 
@@ -86,9 +89,9 @@ class Rouge():
         imgIds = gts.keys()
 
         score = []
-        for id in imgIds:
-            hypo = res[id]
-            ref  = gts[id]
+        for i_id in imgIds:
+            hypo = res[i_id]
+            ref  = gts[i_id]
 
             score.append(self.calc_score(hypo, ref))
 
@@ -100,6 +103,3 @@ class Rouge():
 
         average_score = np.mean(np.array(score))
         return average_score, np.array(score)
-
-    def method(self):
-        return "Rouge"
