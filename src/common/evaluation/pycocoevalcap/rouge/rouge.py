@@ -37,9 +37,9 @@ def my_lcs(string, sub):
 
 
 class Rouge(Scorer):
-    '''
+    """
     Class for computing ROUGE-L score for a set of candidate sentences for the MS COCO test set
-    '''
+    """
 
     def __init__(self):
         # vrama91: updated the value below based on discussion with Hovey
@@ -81,15 +81,16 @@ class Rouge(Scorer):
         """
         Computes Rouge-L score given a set of reference and candidate sentences for the dataset
         Invoked by evaluate_captions.py 
-        :param hypo_for_image: dict : candidate / test sentences with "image name" key and "tokenized sentences" as values 
-        :param ref_for_image: dict : reference MS-COCO sentences with "image name" key and "tokenized sentences" as values
-        :returns: average_score: float (mean ROUGE-L score computed by averaging scores for all the images)
+        :param gts: dict : candidate / test sentences with "image name" key and "tokenized sentences" as values
+        :param res: dict : reference MS-COCO sentences with "image name" key and "tokenized sentences" as values
+        :returns: average_score, all_scores: float (mean ROUGE-L score computed by averaging scores for all the images,
+                                             np.array(float) (ROUGE-L scores for all sentences)
         """
         assert(gts.keys() == res.keys())
-        imgIds = gts.keys()
+        img_ids = gts.keys()
 
         score = []
-        for i_id in imgIds:
+        for i_id in img_ids:
             hypo = res[i_id]
             ref  = gts[i_id]
 

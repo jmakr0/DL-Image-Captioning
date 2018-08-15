@@ -13,8 +13,7 @@ from ..scorer import Scorer
 
 class Cider(Scorer):
     """
-    Main Class to compute the CIDEr metric 
-
+    Main Class to compute the CIDEr metric
     """
 
     def __init__(self, test=None, refs=None, n=4, sigma=6.0):
@@ -32,13 +31,13 @@ class Cider(Scorer):
         """
 
         assert(gts.keys() == res.keys())
-        imgIds = gts.keys()
+        img_ids = gts.keys()
 
         cider_scorer = CiderScorer(n=self._n, sigma=self._sigma)
 
-        for id in imgIds:
-            hypo = res[id]
-            ref = gts[id]
+        for i_id in img_ids:
+            hypo = res[i_id]
+            ref = gts[i_id]
 
             # Sanity check.
             assert(type(hypo) is list)

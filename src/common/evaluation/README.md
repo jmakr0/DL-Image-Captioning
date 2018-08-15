@@ -4,7 +4,7 @@ Microsoft COCO Caption Evaluation
 Evaluation codes for MS COCO caption generation.
 This is obtained from [tylin/coco-caption](https://github.com/tylin/coco-caption).
 See licence under [license.txt](license.txt).
-The original source code was ported to Python 3 and cleaned up.
+The original source code was ported to Python 3 and cleaned up according to PEP-8.
 
 ## Requirements ##
 - java 1.8.0

@@ -66,12 +66,12 @@ class COCOEvalCap:
     def set_eval(self, score, method):
         self.eval[method] = score
 
-    def set_img_to_eval_imgs(self, scores, imgIds, method):
-        for imgId, score in zip(imgIds, scores):
-            if not imgId in self.img2eval:
-                self.img2eval[imgId] = {}
-                self.img2eval[imgId]["image_id"] = imgId
-            self.img2eval[imgId][method] = score
+    def set_img_to_eval_imgs(self, scores, img_ids, method):
+        for img_id, score in zip(img_ids, scores):
+            if img_id not in self.img2eval:
+                self.img2eval[img_id] = {}
+                self.img2eval[img_id]["image_id"] = img_id
+            self.img2eval[img_id][method] = score
 
     def set_eval_imgs(self):
         self.eval_imgs = [e for i, e in self.img2eval.items()]

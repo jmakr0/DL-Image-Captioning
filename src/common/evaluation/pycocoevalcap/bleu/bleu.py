@@ -23,12 +23,12 @@ class Bleu(Scorer):
     def __call__(self, gts, res):
 
         assert(gts.keys() == res.keys())
-        imgIds = gts.keys()
+        img_ids = gts.keys()
 
         bleu_scorer = BleuScorer(n=self._n)
-        for id in imgIds:
-            hypo = res[id]
-            ref = gts[id]
+        for i_id in img_ids:
+            hypo = res[i_id]
+            ref = gts[i_id]
 
             # Sanity check.
             assert(type(hypo) is list)
@@ -38,9 +38,9 @@ class Bleu(Scorer):
 
             bleu_scorer += (hypo[0], ref)
 
-        #score, scores = bleu_scorer.compute_score(option='shortest')
+        # score, scores = bleu_scorer.compute_score(option='shortest')
         score, scores = bleu_scorer.compute_score(option='closest', verbose=1)
-        #score, scores = bleu_scorer.compute_score(option='average', verbose=1)
+        # score, scores = bleu_scorer.compute_score(option='average', verbose=1)
 
         # return (bleu, bleu_info)
         return score, scores
