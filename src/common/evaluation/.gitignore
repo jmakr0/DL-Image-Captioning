@@ -1,3 +1,4 @@
-# temporary folders for spice
+# default temporary folders for spice
+# adopt them here if you change the settings file entries
 pycocoevalcap/spice/cache/
 pycocoevalcap/spice/tmp/
