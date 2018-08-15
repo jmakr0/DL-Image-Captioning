@@ -15,3 +15,8 @@ image_dimensions: [224, 224, 3]
 word_embedding_size: 50
 
 max_caption_length: 15
+
+spice:
+  # relative to spice.py
+  cache_dir: 'cache'
+  tmp_dir: 'tmp'

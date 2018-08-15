@@ -24,3 +24,6 @@ class Settings:
 
     def get_max_caption_length(self):
         return int(self.config.get('max_caption_length'))
+
+    def get_spice_dirs(self):
+        return self.config.get('spice')
