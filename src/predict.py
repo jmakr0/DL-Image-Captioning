@@ -44,7 +44,7 @@ def predict(args):
 
 
 if __name__ == "__main__":
-    arg_parse = ArgumentParser(description="Uses a saved model to generate captions for pictures in a batch." +
+    arg_parse = ArgumentParser(description="Uses a saved model to generate captions for pictures in a batch. " +
                                            "Writes the results into a JSON-file.")
     arg_parse.add_argument('--batch_size',
                            type=int,

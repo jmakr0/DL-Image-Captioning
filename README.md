@@ -1,6 +1,17 @@
 # DL-Image-Captioning
 Project for "Competitive Problem Solving with Deep Learning" at the Hasso-Plattner Institute.
 
+## Development Requirements
+
+**Python packages:**
+
+See file `requirements.txt` for all python packages with their needed version.
+Install all the requirements with:
+
+```bash
+pip install -r requirements.txt
+```
+
 ## Docker
 
 Build the image locally:
@@ -14,6 +25,28 @@ Run the container:
 Upload the container to dockerhub:
 
 ``bash docker/push_to_dockerhub.sh``
+
+## Usage
+
+### Training
+
+### Prediction
+
+### Evaluation
+
+After generating the prediction as a JSON file, you can evaluate your results with the `eval.py` script.
+It uses the MSCOCO evaluation codes:
+- Bleu
+- Meteor (**currently broken**)
+- Rouge-L
+- CIDEr
+- SPICE
+
+You can find more information about the usage of the script by running
+```bash
+python src/eval.py --help
+```
+and about the implemented scores in the [README file](./src/common/evaluation/README.md) of the evaluation module.
 
 ## Helper scripts
 
@@ -31,7 +64,7 @@ You can use it like that:
 
 ```bash
 python src/scripts/glove_normalization.py \
-  --type '<studentz|minmax>'
+  --type '<studentz|minmax>' \
   orig_glove.txt normalized_glove.txt
 ```
 
@@ -49,7 +82,7 @@ Usage:
 
 ```bash
 python src/scripts/filter_metadata.py \
-  --negative_image_ids 1234 5678
+  --negative_image_ids 1234 5678 \
   orig_metadata.json cleaned_metadata.json
 
 ```
@@ -69,3 +102,12 @@ python src/script/weights2model.py weights.h5 model.pkl
 
 You can use the flag `-p` to plot the model as a `.png`-picture under the name `cacao_model.png`.
 For this to work, you must have installed `pydot` and [Graphviz](https://www.graphviz.org/).
+
+## Known Problems
+
+- If you want to use METEOR scores, the whole repo must be located in a path without spaces.
+  The METEOR scorer is written in Java and creates a file path URL relative to its location pointing to a data file.
+  The file path is urlencoded twice in the Java code and therefore leads to an exception because it can not find the data file.
+  This can only be avoided by not using any space or other special characters in the file path to the JAR file of the scorer.
+
+- METEOR scoring currently does not work, because of subprocess communication issues with the Java code.
