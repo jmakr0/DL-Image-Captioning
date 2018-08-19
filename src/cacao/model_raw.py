@@ -22,7 +22,7 @@ def image_captioning_model_raw(img_shape=(224, 224, 3), cnn='resnet152', embeddi
     reshape_embd_word_for_concat = Reshape((1, embedding_dim))
 
     # Start vars
-    embd_word = Dense(50, activation='relu')(cnn_output)  # learn first word
+    embd_word = Dense(embedding_dim, activation='relu')(cnn_output)  # learn first word
 
     state = None
     words = []
