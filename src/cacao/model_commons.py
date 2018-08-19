@@ -74,7 +74,9 @@ def replace_embedding_word_during_training(index):
 def create_compile_model(inputs, outputs, gpus=0, lr=1e-3, loss='mean_squared_error', name="image_captioning_model"):
     model = Model(inputs=inputs, outputs=outputs, name=name)
     if gpus >= 2:
-        model = multi_gpu_model(model, gpus=gpus)
-    model.compile(optimizer=Adam(lr=lr), loss=loss, metrics=['mae'])
-    return model
-
+        multi_model = multi_gpu_model(model, gpus=gpus)
+        multi_model.compile(optimizer=Adam(lr=lr), loss=loss, metrics=['mae'])
+        return model, multi_model
+    else:
+        model.compile(optimizer=Adam(lr=lr), loss=loss, metrics=['mae'])
+        return model, None
