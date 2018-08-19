@@ -9,7 +9,7 @@ def image_captioning_model_raw(img_shape=(224, 224, 3), cnn='resnet152', embeddi
                                gpus=0, lr=1e-3, regularizer=1e-8, dropout=0.2):
     # Definition of CNN
     cnn_input = Input(shape=img_shape)
-    cnn_output, cnn_output_len = C.image_embedding(cnn_input, cnn=cnn, img_shape=img_shape)
+    cnn_output, cnn_output_len = C.image_embedding(cnn_input, cnn, img_shape)
 
     # Caption Input
     caption_input = Input((max_caption_length, embedding_dim))
