@@ -3,6 +3,11 @@ Project for "Competitive Problem Solving with Deep Learning" at the Hasso-Plattn
 
 ## Development Requirements
 
+**OS-level requirements**
+
+- java 1.8.0
+- python 3
+
 **Python packages:**
 
 See file `requirements.txt` for all python packages with their needed version.

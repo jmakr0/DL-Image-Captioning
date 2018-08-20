@@ -20,3 +20,5 @@ tensorflow==1.8.0
 tensorflow-gpu==1.8.0
 termcolor==1.1.0
 Werkzeug==0.14.1
+jupyter==1.0.0
+tornado==4.5.3

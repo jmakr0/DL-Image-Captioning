@@ -39,10 +39,15 @@ def train(args):
     callbacks = common_callbacks(batch_size=args.batch_size, exp_id=args.exp_id)
     os.environ['CUDA_VISIBLE_DEVICES'] = ', '.join(map(str, args.devices))
 
-    model = type_switcher.get(args.model_type)(lr=args.lr, cnn=args.cnn, gpus=len(args.devices),
+    original_model, multigpu_model = type_switcher.get(args.model_type)(lr=args.lr, cnn=args.cnn, gpus=len(args.devices),
                                                img_shape=config.get_image_dimensions(),
                                                embedding_dim=config.get_word_embedding_size(),
                                                max_caption_length=config.get_max_caption_length())
+    if multigpu_model:
+        model = multigpu_model
+    else:
+        model = original_model
+
     model.summary()
     model.fit_generator(train_sequence,
                         epochs=args.epochs,
@@ -56,8 +61,8 @@ def train(args):
     model_dir = config.get_path('models')
     model_path = os.path.join(model_dir, 'model{}_{}_{}_{}.model'.format(args.exp_id, args.cnn, args.batch_size, args.epochs))
 
-    model.save_weights(model_path + '.weights')
-    model.save(model_path)
+    original_model.save_weights(model_path + '.weights')
+    original_model.save(model_path)
 
 
 if __name__ == '__main__':

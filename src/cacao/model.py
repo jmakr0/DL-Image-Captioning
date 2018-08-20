@@ -6,7 +6,7 @@ import src.cacao.model_commons as C
 
 
 def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_dim=50, max_caption_length=15,
-                           gpus=0, lr=1e-3, regularizer=1e-8, dropout=0.2):
+                           gpus=0, lr=1e-3, regularizer=1e-8, dropout_rate=0.2):
     # Definition of CNN
     cnn_input = Input(shape=img_shape)
     cnn_output, cnn_output_len = C.image_embedding(cnn_input, cnn, img_shape)
@@ -16,13 +16,13 @@ def image_captioning_model(img_shape=(224, 224, 3), cnn='resnet152', embedding_d
 
     # Definition of RNN
     # TODO: friedrich: We probably have to change the units down to a more feasible value
-    rnn = C.lstm_generator(1024, dropout=dropout, l2_reg=regularizer)
+    rnn = C.lstm_generator(1024, dropout=dropout_rate, l2_reg=regularizer)
     attention_layer = C.dense_attention_layer(cnn_output_len, l2_reg=regularizer)
     embedding = C.three_layer_word_embedding(512, 256, embedding_dim, l2_reg=regularizer)
 
     # Auxiliary layers
     multiply = Multiply()
-    dropout = Dropout(dropout)
+    dropout = Dropout(dropout_rate)
     concatenate = Concatenate()
     reshape_rnn_in = Reshape((1, embedding_dim + cnn_output_len))
     reshape_embd_word_for_concat = Reshape((1, embedding_dim))

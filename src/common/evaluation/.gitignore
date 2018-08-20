@@ -2,3 +2,7 @@
 # adopt them here if you change the settings file entries
 pycocoevalcap/spice/cache/
 pycocoevalcap/spice/tmp/
+
+# result files from demo notebook
+demo/captions_val2014_fakecap_eval.json
+demo/captions_val2014_fakecap_evalImgs.json

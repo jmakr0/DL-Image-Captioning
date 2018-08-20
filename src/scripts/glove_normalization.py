@@ -10,11 +10,11 @@ LOW = -1
 
 def min_max_scaling(vectors, low=LOW, high=HIGH):
     print("\nScaling vectors to min={} and max={}".format(low, high))
-    v_min = np.min(vectors)
-    v_max = np.max(vectors)
-    rng = v_max - v_min
+    minimum = np.min(vectors)
+    maximum = np.max(vectors)
+    rng = maximum - minimum
 
-    return high - (((high - low) * (v_max - vectors)) / rng)
+    return high - (((high - low) * (maximum - vectors)) / rng)
 
 
 def student_z_standardizing(vectors):

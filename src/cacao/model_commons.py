@@ -9,14 +9,14 @@ from keras.utils import multi_gpu_model
 from src.common.modules.resnet import ResNet152Embed
 
 
-def image_embedding(cnn_input, cnn='resnet50', img_shape=(224, 224, 3)):
+def image_embedding(cnn_input, cnn_name='resnet50', img_shape=(224, 224, 3)):
     cnn_switcher = {
         'resnet50': ResNet50,
         'resnet152': ResNet152Embed
     }
 
     # Definition of CNN
-    cnn = cnn_switcher[cnn](
+    cnn = cnn_switcher[cnn_name](
         include_top=False,
         weights='imagenet',
         input_tensor=cnn_input,
@@ -25,7 +25,7 @@ def image_embedding(cnn_input, cnn='resnet50', img_shape=(224, 224, 3)):
     for layer in cnn.layers:
         layer.trainable = False
 
-    if cnn == 'resnet152':
+    if cnn_name == 'resnet152':
         cnn_output = Flatten(name="final_cnn_flatten")(cnn.output)
     else:
         cnn_output = Flatten(name="final_cnn_flatten")(AveragePooling2D((7, 7), name="final_cnn_pool")(cnn.output))
@@ -74,7 +74,9 @@ def replace_embedding_word_during_training(index):
 def create_compile_model(inputs, outputs, gpus=0, lr=1e-3, loss='mean_squared_error', name="image_captioning_model"):
     model = Model(inputs=inputs, outputs=outputs, name=name)
     if gpus >= 2:
-        model = multi_gpu_model(model, gpus=gpus)
-    model.compile(optimizer=Adam(lr=lr), loss=loss, metrics=['mae'])
-    return model
-
+        multi_model = multi_gpu_model(model, gpus=gpus)
+        multi_model.compile(optimizer=Adam(lr=lr), loss=loss, metrics=['mae'])
+        return model, multi_model
+    else:
+        model.compile(optimizer=Adam(lr=lr), loss=loss, metrics=['mae'])
+        return model, None

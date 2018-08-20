@@ -8,7 +8,7 @@ The original source code was ported to Python 3 and cleaned up according to PEP-
 
 ## Requirements ##
 - java 1.8.0
-- python 2.7
+- python 3.6
 
 ## Files ##
 ./
