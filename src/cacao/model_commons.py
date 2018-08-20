@@ -54,11 +54,18 @@ def lstm_generator(nodes, dropout=.0, l2_reg=1e-8):
                 kernel_regularizer=l2(l2_reg))
 
 
-def three_layer_word_embedding(nodes1, nodes2, nodes3, l2_reg=1e-8):
-    embedding_layer1 = Dense(nodes1, activation='relu', kernel_regularizer=l2(l2_reg), name="word_embd_1")
-    embedding_layer2 = Dense(nodes2, activation='relu', kernel_regularizer=l2(l2_reg), name="word_embd_2")
-    embedding_layer3 = Dense(nodes3, activation='tanh', kernel_regularizer=l2(l2_reg), name="word_embd_3")
-    return lambda input_tensor: embedding_layer3(embedding_layer2(embedding_layer1(input_tensor)))
+def x_layer_word_embedding(node_counts, l2_reg=1e-8):
+    """
+    :param node_counts: List of output neurons for each dense layer.
+    :return:
+    """
+    embedding_layers = [Dense(node_count, activation='relu', kernel_regularizer=l2(l2_reg)) for node_count in node_counts]
+    def fun(input_tensor):
+        result = input_tensor
+        for embedding_layer in embedding_layers:
+            result = embedding_layer(result)
+        return result
+    return fun
 
 
 def single_layer_word_embedding(nodes, l2_reg=1e-8):
