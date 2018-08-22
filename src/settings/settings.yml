@@ -16,6 +16,8 @@ word_embedding_size: 50
 
 max_caption_length: 15
 
+stop_word: '.'
+
 spice:
   # relative to spice.py
   cache_dir: 'cache'

@@ -15,10 +15,12 @@ class Glove:
         self.embedding_path = settings.get_glove_embedding()
         self.word_embedding_size = settings.get_word_embedding_size()
         self.max_caption_length = settings.get_max_caption_length()
+        self.stop_word = settings.get_stop_word()
 
         self.word_numbers = {}
         self.embedding_vectors = np.zeros((dictionary_size, self.word_embedding_size))
         self.words = {}
+        self.stop_word_vector = None
         self.vectors_norm = None
 
     def load_embedding(self):
@@ -34,6 +36,8 @@ class Glove:
 
                 if line_number-1 == self.dictionary_size:
                     break
+
+        self.stop_word_vector = self.get_word_vector(self.stop_word)
 
         self.vectors_norm = None
 
@@ -81,10 +85,10 @@ class Glove:
         index_sequence = self.text_to_word_indices(string, limit=self.max_caption_length)
 
         embedded_words = self.embedding_vectors[index_sequence]
-        zero_vector = np.zeros(shape=(self.max_caption_length, self.word_embedding_size))
-        zero_vector[:len(embedded_words)] = embedded_words
+        fix_len_embeddings = np.full((self.max_caption_length, self.word_embedding_size), self.stop_word_vector)
+        fix_len_embeddings[:len(embedded_words)] = embedded_words
 
-        return zero_vector
+        return fix_len_embeddings
 
     def wordembedding_to_most_similar_word(self, v_embedding):
         # use numpy-version from gensim instead:

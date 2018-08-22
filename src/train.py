@@ -1,4 +1,5 @@
 import argparse
+from datetime import datetime
 import sys; import os; sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 import numpy as np
@@ -59,7 +60,7 @@ def train(args):
                         max_queue_size=20)
 
     model_dir = config.get_path('models')
-    model_path = os.path.join(model_dir, 'model{}_{}_{}_{}.model'.format(args.exp_id, args.cnn, args.batch_size, args.epochs))
+    model_path = os.path.join(model_dir, 'model{}_{}_{}_{}_{}.model'.format(args.exp_id, args.model_type, args.cnn, args.batch_size, args.epochs))
 
     original_model.save_weights(model_path + '.weights')
     original_model.save(model_path)
@@ -70,7 +71,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--exp_id',
                         type=str,
-                        default=str(np.random.randint(20, 1000)),
+                        default=str(int(datetime.now().timestamp())),
                         help="experiment ID for saving logs")
     parser.add_argument('--devices',
                         type=int, nargs='*',

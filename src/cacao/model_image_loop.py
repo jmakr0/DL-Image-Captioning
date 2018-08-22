@@ -15,9 +15,8 @@ def image_captioning_model_image_loop(img_shape=(224, 224, 3), cnn='resnet152', 
     caption_input = Input((max_caption_length, embedding_dim))
 
     # Definition of RNN
-    # TODO: friedrich: We probably have to change the units down to a more feasible value
-    rnn = C.lstm_generator(1024, dropout=dropout, l2_reg=regularizer)
-    embedding_layer = C.three_layer_word_embedding(512, 256, embedding_dim)
+    rnn = C.lstm_generator(150, dropout=dropout, l2_reg=regularizer)
+    embedding_layer = C.x_layer_word_embedding([100, embedding_dim])
 
     # Auxiliary layers
     concatenate = Concatenate()
