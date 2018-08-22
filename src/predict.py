@@ -8,8 +8,6 @@ from keras import backend as K
 from keras.models import load_model
 
 from src.common.dataloader.dataloader import TestSequence
-from src.common.dataloader.glove import Glove
-
 from src.common.postprocessing.postprocessor import Postprocessor
 
 from src.settings.settings import Settings
@@ -19,10 +17,6 @@ def predict(args):
     K.set_learning_phase(0)
 
     postprocessor = Postprocessor()
-
-    print("loading embedding")
-    glove = Glove(dictionary_size=400000)
-    glove.load_embedding()
 
     print("loading model")
     model = load_model(args.model_path)
@@ -35,10 +29,8 @@ def predict(args):
         ids, images = test_sequence[i]
         predictions = model.predict_on_batch(images)
 
-        for id_, capt in zip(ids, predictions):
-            full_prediction = [glove.most_similar_word(embd_word) for embd_word in capt]
-            cropped_caption = postprocessor.crop_caption(full_prediction)
-            caption_string = ' '.join([word for word in cropped_caption])
+        for id_, word_vectors in zip(ids, predictions):
+            caption_string = postprocessor.build_caption(word_vectors)
             results.append({
                 "image_id": int(id_),
                 "caption": caption_string
