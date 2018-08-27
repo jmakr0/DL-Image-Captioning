@@ -78,12 +78,14 @@ def replace_embedding_word_during_training(index):
     return Lambda(get_word_with_index, name="train_word_{}".format(index))
 
 
-def create_compile_model(inputs, outputs, gpus=0, lr=1e-3, loss='mean_squared_error', name="image_captioning_model"):
+def create_compile_model(inputs, outputs, gpus=0, lr=1e-3, loss='mean_squared_error', name="image_captioning_model",
+                         metrics=None):
+    metrics = metrics if metrics is not None else ['mae']
     model = Model(inputs=inputs, outputs=outputs, name=name)
     if gpus >= 2:
         multi_model = multi_gpu_model(model, gpus=gpus)
-        multi_model.compile(optimizer=Adam(lr=lr), loss=loss, metrics=['mae'])
+        multi_model.compile(optimizer=Adam(lr=lr), loss=loss, metrics=metrics)
         return model, multi_model
     else:
-        model.compile(optimizer=Adam(lr=lr), loss=loss, metrics=['mae'])
+        model.compile(optimizer=Adam(lr=lr), loss=loss, metrics=metrics)
         return model, None

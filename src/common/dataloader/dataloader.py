@@ -12,7 +12,8 @@ from src.settings.settings import Settings
 
 class DataLoadingSequence(Sequence):
 
-    def __init__(self, partition, batch_size, input_caption=False, shuffle=False):
+    def __init__(self, partition, batch_size, input_caption=False, shuffle=False, use_word_indices=False,
+                 dictionary_size=400000):
         if partition != 'train' and partition != 'val' and partition != 'test':
             raise ValueError("partition `{}` is not valid. Either specify `train` or `val`".format(partition))
 
@@ -20,6 +21,7 @@ class DataLoadingSequence(Sequence):
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.input_caption = input_caption
+        self.use_word_indices = use_word_indices
 
         settings = Settings()
         self.word_embedding_size = settings.get_word_embedding_size()
@@ -30,7 +32,7 @@ class DataLoadingSequence(Sequence):
         else:
             self.annotations_dir = settings.get_path('annotations')
 
-            self.glove = Glove()
+            self.glove = Glove(dictionary_size=dictionary_size)
             self.glove.load_embedding()
 
         self.image_dimensions = settings.get_image_dimensions()
@@ -74,6 +76,7 @@ class DataLoadingSequence(Sequence):
         ids = []
         images = np.zeros(shape=(bs,) + self.image_dimensions)
         captions = np.zeros(shape=(bs, self.max_caption_length, self.word_embedding_size))
+        one_hot_caption = np.zeros(shape=(bs, self.max_caption_length, self.glove.dictionary_size))
 
         for i, metadata in enumerate(batch):
             ids.append(metadata['id'])
@@ -89,11 +92,18 @@ class DataLoadingSequence(Sequence):
 
             if not self.test_mode:
                 captions[i] = self.glove.embed_text(metadata['caption'])
+                one_hot_caption[i] = self.glove.one_hot_vector(metadata['caption'])
 
         if self.test_mode:
-            return (images, ids) if self.input_caption is False else (ids, [images, captions])
+            return (images, ids) if not self.input_caption else (ids, [images, captions])
         else:
-            return (images, captions) if self.input_caption is False else ([images, captions], captions)
+            if not self.input_caption:
+                return images, captions
+            else:
+                if self.use_word_indices:
+                    return [images, captions], one_hot_caption
+                else:
+                    return [images, captions], captions
 
     def _get_image(self, image_path):
         if len(self.image_dimensions) == 2:
@@ -113,15 +123,18 @@ class DataLoadingSequence(Sequence):
 
 
 class TrainSequence(DataLoadingSequence):
-    def __init__(self, batch_size, input_caption=False):
-        super().__init__('train', batch_size, input_caption=input_caption, shuffle=True)
+    def __init__(self, batch_size, input_caption=False, use_word_indices=False, dictionary_size=400000):
+        super().__init__('train', batch_size, input_caption=input_caption, use_word_indices=use_word_indices,
+                         dictionary_size=dictionary_size, shuffle=True)
 
 
 class ValSequence(DataLoadingSequence):
-    def __init__(self, batch_size, input_caption=False):
-        super().__init__('val', batch_size, input_caption=input_caption, shuffle=True)
+    def __init__(self, batch_size, input_caption=False, use_word_indices=False, dictionary_size=400000):
+        super().__init__('val', batch_size, input_caption=input_caption, use_word_indices=use_word_indices,
+                         dictionary_size=dictionary_size, shuffle=True)
 
 
 class TestSequence(DataLoadingSequence):
-    def __init__(self, batch_size, input_caption=False):
-        super().__init__('test', batch_size, input_caption=input_caption, shuffle=False)
+    def __init__(self, batch_size, input_caption=False, use_word_indices=False, dictionary_size=400000):
+        super().__init__('test', batch_size, input_caption=input_caption, use_word_indices=use_word_indices,
+                         dictionary_size=dictionary_size, shuffle=False)

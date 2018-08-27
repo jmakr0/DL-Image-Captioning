@@ -1,6 +1,7 @@
 import sys
 
 import numpy as np
+from keras.utils import to_categorical
 from scipy import spatial
 
 from src.common.dataloader import matutils
@@ -21,6 +22,7 @@ class Glove:
         self.embedding_vectors = np.zeros((dictionary_size, self.word_embedding_size))
         self.words = {}
         self.stop_word_vector = None
+        self.one_hot_stop_word_vector = None
         self.vectors_norm = None
 
     def load_embedding(self):
@@ -38,6 +40,8 @@ class Glove:
                     break
 
         self.stop_word_vector = self.get_word_vector(self.stop_word)
+        self.one_hot_stop_word_vector = to_categorical(self.get_word_number(self.stop_word),
+                                                       num_classes=self.dictionary_size)
 
         self.vectors_norm = None
 
@@ -80,6 +84,12 @@ class Glove:
             vector.append(self.get_word_number(word))
 
         return vector
+
+    def one_hot_vector(self, string):
+        index_sequence = self.text_to_word_indices(string, limit=self.max_caption_length)
+        fix_len_indices = np.tile(self.one_hot_stop_word_vector, (self.max_caption_length, 1))
+        fix_len_indices[:len(index_sequence)] = to_categorical(index_sequence, num_classes=self.dictionary_size)
+        return fix_len_indices
 
     def embed_text(self, string):
         index_sequence = self.text_to_word_indices(string, limit=self.max_caption_length)
