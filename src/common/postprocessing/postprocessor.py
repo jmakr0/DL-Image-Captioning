@@ -3,13 +3,12 @@ from src.settings.settings import Settings
 
 
 class Postprocessor:
-
-    def __init__(self, dictionary_size=400000, one_hot=False):
+    def __init__(self, one_hot=False):
         settings = Settings()
         self.stop_word = settings.get_stop_word()
 
         print("loading embedding")
-        glove = Glove(dictionary_size=dictionary_size)
+        glove = Glove()
         glove.load_embedding()
         self.one_hot = one_hot
         self.glove = glove

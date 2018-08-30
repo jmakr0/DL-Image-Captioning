@@ -41,12 +41,12 @@ def constant_ones_tensor(size):
 
 
 def dense_attention_layer(nodes, l2_reg=1e-8):
-    return Dense(nodes, activation='sigmoid', kernel_regularizer=l2(l2_reg), name="attention")
+    return Dense(nodes, activation='sigmoid', kernel_regularizer=l2(l2_reg), name='attention')
 
 
 def lstm_generator(nodes, dropout=.0, l2_reg=1e-8):
     return LSTM(nodes,
-                name="word_embd_rnn",
+                name='word_embd_rnn',
                 return_sequences=False, return_state=True,
                 dropout=dropout, recurrent_dropout=dropout,
                 recurrent_regularizer=l2(l2_reg),
@@ -56,10 +56,13 @@ def lstm_generator(nodes, dropout=.0, l2_reg=1e-8):
 
 def x_layer_word_embedding(node_counts, l2_reg=1e-8):
     """
+    :param l2_reg:
     :param node_counts: List of output neurons for each dense layer.
     :return:
     """
-    embedding_layers = [Dense(node_count, activation='relu', kernel_regularizer=l2(l2_reg)) for node_count in node_counts]
+    embedding_layers = [Dense(node_count, activation='relu', kernel_regularizer=l2(l2_reg))
+                        for node_count in node_counts]
+
     def fun(input_tensor):
         result = input_tensor
         for embedding_layer in embedding_layers:

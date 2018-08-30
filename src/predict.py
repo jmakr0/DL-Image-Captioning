@@ -7,22 +7,33 @@ from argparse import ArgumentParser
 from keras import backend as K
 from keras.models import load_model
 
+from src.cacao.model import image_captioning_model
+from src.cacao.model_image_loop import image_captioning_model_image_loop
+from src.cacao.model_raw import image_captioning_model_raw
+from src.cacao.model_softmax import image_captioning_model_softmax
 from src.common.dataloader.dataloader import TestSequence
 from src.common.postprocessing.postprocessor import Postprocessor
 
 from src.settings.settings import Settings
 
+type_switcher = {
+    'full': image_captioning_model,
+    'image_loop': image_captioning_model_image_loop,
+    'raw': image_captioning_model_raw,
+    'softmax': image_captioning_model_softmax
+}
+
 
 def predict(args):
     K.set_learning_phase(0)
 
-    postprocessor = Postprocessor(dictionary_size=14831, one_hot=True)
+    postprocessor = Postprocessor(one_hot=args.model_type == 'softmax')
 
     print("loading model")
     model = load_model(args.model_path)
 
     print("beginning prediction on batches of size {}".format(args.batch_size))
-    test_sequence = TestSequence(args.batch_size, input_caption=True, dictionary_size=14831)
+    test_sequence = TestSequence(args.batch_size, input_caption=True)
 
     results = []
     for i in range(len(test_sequence)):
@@ -48,6 +59,9 @@ if __name__ == "__main__":
                            type=int,
                            default=8,
                            help="batch size to make the predictions")
+    arg_parse.add_argument('--model_type',
+                           type=str,
+                           default='full', choices=type_switcher.keys())
     arg_parse.add_argument('model_path',
                            type=str,
                            help="filepath of the saved `cacao` model to use for generating captions")

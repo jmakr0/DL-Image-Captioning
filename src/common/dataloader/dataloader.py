@@ -12,8 +12,7 @@ from src.settings.settings import Settings
 
 class DataLoadingSequence(Sequence):
 
-    def __init__(self, partition, batch_size, input_caption=False, shuffle=False, use_word_indices=False,
-                 dictionary_size=400000):
+    def __init__(self, partition, batch_size, input_caption=False, shuffle=False, use_word_indices=False):
         if partition != 'train' and partition != 'val' and partition != 'test':
             raise ValueError("partition `{}` is not valid. Either specify `train` or `val`".format(partition))
 
@@ -22,18 +21,18 @@ class DataLoadingSequence(Sequence):
         self.shuffle = shuffle
         self.input_caption = input_caption
         self.use_word_indices = use_word_indices
-        self.dictionary_size = dictionary_size
 
         settings = Settings()
         self.word_embedding_size = settings.get_word_embedding_size()
         self.max_caption_length = settings.get_max_caption_length()
+        self.dictionary_size = settings.get_dictionary_size()
 
         if self.test_mode:
             self.annotations_dir = settings.get_path('test_metadata')
         else:
             self.annotations_dir = settings.get_path('annotations')
 
-            self.glove = Glove(dictionary_size=dictionary_size)
+            self.glove = Glove()
             self.glove.load_embedding()
 
         self.image_dimensions = settings.get_image_dimensions()
@@ -124,18 +123,18 @@ class DataLoadingSequence(Sequence):
 
 
 class TrainSequence(DataLoadingSequence):
-    def __init__(self, batch_size, input_caption=False, use_word_indices=False, dictionary_size=400000):
+    def __init__(self, batch_size, input_caption=False, use_word_indices=False):
         super().__init__('train', batch_size, input_caption=input_caption, use_word_indices=use_word_indices,
-                         dictionary_size=dictionary_size, shuffle=True)
+                         shuffle=True)
 
 
 class ValSequence(DataLoadingSequence):
-    def __init__(self, batch_size, input_caption=False, use_word_indices=False, dictionary_size=400000):
+    def __init__(self, batch_size, input_caption=False, use_word_indices=False):
         super().__init__('val', batch_size, input_caption=input_caption, use_word_indices=use_word_indices,
-                         dictionary_size=dictionary_size, shuffle=True)
+                         shuffle=True)
 
 
 class TestSequence(DataLoadingSequence):
-    def __init__(self, batch_size, input_caption=False, use_word_indices=False, dictionary_size=400000):
+    def __init__(self, batch_size, input_caption=False, use_word_indices=False):
         super().__init__('test', batch_size, input_caption=input_caption, use_word_indices=use_word_indices,
-                         dictionary_size=dictionary_size, shuffle=False)
+                         shuffle=False)

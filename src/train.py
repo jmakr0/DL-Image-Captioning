@@ -2,7 +2,6 @@ import argparse
 from datetime import datetime
 import sys; import os; sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-import numpy as np
 from keras import backend as K
 
 from src.cacao.model import image_captioning_model
@@ -35,13 +34,10 @@ def train(args):
 
     K.set_learning_phase(1)
 
-    _use_indices = True if args.model_type == 'softmax' else False
-    train_sequence = TrainSequence(args.batch_size, input_caption=True, use_word_indices=_use_indices,
-                                   dictionary_size=args.dictionary_size)
-    val_sequence = ValSequence(args.batch_size, input_caption=True, use_word_indices=_use_indices,
-                               dictionary_size=args.dictionary_size)
-
     config = Settings()
+    _use_indices = True if args.model_type == 'softmax' else False
+    train_sequence = TrainSequence(args.batch_size, input_caption=True, use_word_indices=_use_indices)
+    val_sequence = ValSequence(args.batch_size, input_caption=True, use_word_indices=_use_indices)
     callbacks = common_callbacks(batch_size=args.batch_size, exp_id=args.exp_id)
     os.environ['CUDA_VISIBLE_DEVICES'] = ', '.join(map(str, args.devices))
 
@@ -49,7 +45,8 @@ def train(args):
         lr=args.lr, cnn=args.cnn, gpus=len(args.devices),
         img_shape=config.get_image_dimensions(),
         embedding_dim=config.get_word_embedding_size(),
-        max_caption_length=config.get_max_caption_length())
+        max_caption_length=config.get_max_caption_length(),
+        dictionary_size=config.get_dictionary_size())
     if multigpu_model:
         model = multigpu_model
     else:
@@ -107,10 +104,6 @@ if __name__ == '__main__':
                         type=str,
                         default='full', choices=type_switcher.keys(),
                         help="selects model to train with growing capabilities")
-    parser.add_argument('--dictionary_size',
-                        type=int,
-                        default=400000,
-                        help="size of glove dictionary")
     parser.add_argument('settings',
                         type=str,
                         help="filepath to the configuration file")

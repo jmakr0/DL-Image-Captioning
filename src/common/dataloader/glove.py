@@ -1,25 +1,21 @@
-import sys
-
 import numpy as np
 from keras.utils import to_categorical
-from scipy import spatial
 
 from src.common.dataloader import matutils
 from src.settings.settings import Settings
 
 
 class Glove:
-    def __init__(self, dictionary_size=400000):
-        self.dictionary_size = dictionary_size
-
+    def __init__(self):
         settings = Settings()
+        self.dictionary_size = settings.get_dictionary_size()
         self.embedding_path = settings.get_glove_embedding()
         self.word_embedding_size = settings.get_word_embedding_size()
         self.max_caption_length = settings.get_max_caption_length()
         self.stop_word = settings.get_stop_word()
 
         self.word_numbers = {}
-        self.embedding_vectors = np.zeros((dictionary_size, self.word_embedding_size))
+        self.embedding_vectors = np.zeros((self.dictionary_size, self.word_embedding_size))
         self.words = {}
         self.stop_word_vector = None
         self.one_hot_stop_word_vector = None

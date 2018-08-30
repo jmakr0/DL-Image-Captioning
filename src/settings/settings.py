@@ -17,10 +17,13 @@ class Settings:
 
     def get_image_dimensions(self):
         dim = self.config.get('image_dimensions')
-        return (int(dim[0]), int(dim[1]), int(dim[2]))
+        return int(dim[0]), int(dim[1]), int(dim[2])
 
     def get_word_embedding_size(self):
         return int(self.config.get('word_embedding_size'))
+
+    def get_dictionary_size(self):
+        return int(self.config.get('dictionary_size'))
 
     def get_max_caption_length(self):
         return int(self.config.get('max_caption_length'))
