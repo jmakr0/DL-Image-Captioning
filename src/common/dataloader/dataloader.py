@@ -76,7 +76,7 @@ class DataLoadingSequence(Sequence):
         ids = []
         images = np.zeros(shape=(bs,) + self.image_dimensions)
         captions = np.zeros(shape=(bs, self.max_caption_length, self.word_embedding_size))
-        one_hot_caption = np.zeros(shape=(bs, self.max_caption_length, self.dictionary_size))
+        one_hot_captions = np.zeros(shape=(bs, self.max_caption_length, self.dictionary_size))
 
         for i, metadata in enumerate(batch):
             ids.append(metadata['id'])
@@ -92,7 +92,7 @@ class DataLoadingSequence(Sequence):
 
             if not self.test_mode:
                 captions[i] = self.glove.embed_text(metadata['caption'])
-                one_hot_caption[i] = self.glove.one_hot_vector(metadata['caption'])
+                one_hot_captions[i] = self.glove.one_hot_vector(metadata['caption'])
 
         if self.test_mode:
             return (images, ids) if not self.input_caption else (ids, [images, captions])
@@ -101,7 +101,7 @@ class DataLoadingSequence(Sequence):
                 return images, captions
             else:
                 if self.use_word_indices:
-                    return [images, captions], one_hot_caption
+                    return [images, captions], one_hot_captions
                 else:
                     return [images, captions], captions
 
