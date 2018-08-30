@@ -21,17 +21,6 @@ type_switcher = {
 
 
 def train(args):
-    """
-    ToDo:
-     * Refine model: BatchNorm Layer, different LossFunctions, tune parameters/optimizers.
-     * Print out loss and create diagrams.
-     * Experiments on all models.
-     * Think about project structure.
-
-     * max caption len in train data -> 37
-     * Review: clip attention, image feature vector size
-    """
-
     K.set_learning_phase(1)
 
     config = Settings()
@@ -108,11 +97,18 @@ if __name__ == '__main__':
                         type=str,
                         help="filepath to the configuration file")
 
-    # parser.add_argument('--final_submission', default='False', choices=['True', 'False'])
     arguments = parser.parse_args()
 
     if not os.path.isfile(arguments.settings):
         raise FileNotFoundError('Settings under {} do not exist.'.format(arguments.settings))
     Settings.FILE = arguments.settings
+
+    # see https://github.com/jmakr0/DL-Image-Captioning/issues/42
+    if len(arguments.devices) > 1:
+        first_gpu = arguments.devices[0]
+        print("Our models are currently not compatible with keras' multi_gpu-training. " +
+              "You can only use one gpu for training!")
+        print("Ignoring all GPUs except the first one: {}".format(first_gpu))
+        arguments.devices = [first_gpu]
 
     train(arguments)

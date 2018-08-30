@@ -1,7 +1,12 @@
-# DL-Image-Captioning
+DL-Image-Captioning
+===================
 Project for "Competitive Problem Solving with Deep Learning" at the Hasso-Plattner Institute.
 
-## Development Requirements
+## Requirements
+
+These are the requirements for local usage and development.
+You can also use a Docker image to make predictions.
+See section [Use with Docker](#use-with-docker) below.
 
 **OS-level requirements**
 
@@ -17,27 +22,19 @@ Install all the requirements with:
 pip install -r requirements.txt
 ```
 
-## Docker
-
-Build the image locally:
-
-``docker build -f docker/Dockerfile . --tag image-captioning``
-
-Run the container:
-
-``docker run --rm -v "Your_INPUT_Directory_Path:/usr/src/app/data/input" -v "Your_OUTPUT_Directory_Path:/usr/src/app/data/output" image-captioning``
-
-Upload the container to dockerhub:
-
-``bash docker/push_to_dockerhub.sh``
-
 ## Usage
 
-### Training
+### Use with Docker
 
-### Prediction
+**tbd**
 
-### Evaluation
+### Use locally
+
+#### Training
+
+#### Prediction
+
+#### Evaluation
 
 After generating the prediction as a JSON file, you can evaluate your results with the `eval.py` script.
 It uses the MSCOCO evaluation codes:
@@ -53,13 +50,13 @@ python src/eval.py --help
 ```
 and about the implemented scores in the [README file](./src/common/evaluation/README.md) of the evaluation module.
 
-## Helper scripts
+#### Helper scripts
 
 This project comes with some scripts that help dealing with the data used for prediction and training of the machine learning models.
 You can find those scripts in the folder `src/scripts/`.
 All scripts support the switch `--help`, which can be used to find out more about the usage of it.
 
-### Glove Embedding
+##### Glove Embedding
 
 This project uses the Glove embedding vectors to convert words to vectors for training and prediction.
 The class `Glove` builds a wrapper around the raw vector embeddings and provides lookup methods for accessing vectors and words.
@@ -77,7 +74,7 @@ python src/scripts/glove_normalization.py \
 For more information take a look at [Wikipedia: Standard score](https://en.wikipedia.org/wiki/Standard_score).
 `minmax` in its default configuration scales all values to the interval `[-1, 1]`
 
-### Filter Metadata
+##### Filter Metadata
 
 Some datasets used during this project contained metadata, whose filenames to the pictures were erroneous.
 The script `filter_metadata.py` can be used to remove unwanted pictures and annotations from the metadata,
@@ -92,7 +89,7 @@ python src/scripts/filter_metadata.py \
 
 ```
 
-### Convert Saved Weights to a Model
+##### Convert Saved Weights to a Model
 
 During training, you have to options to save your current progress:
 Saving the pickled model or just saving the weights.
@@ -108,6 +105,38 @@ python src/script/weights2model.py weights.h5 model.pkl
 You can use the flag `-p` to plot the model as a `.png`-picture under the name `cacao_model.png`.
 For this to work, you must have installed `pydot` and [Graphviz](https://www.graphviz.org/).
 
+## Development
+
+### Docker
+
+Build the image locally:
+
+``docker build -f docker/Dockerfile . --tag image-captioning``
+
+Run the container:
+
+``docker run --rm -v "Your_INPUT_Directory_Path:/usr/src/app/data/input" -v "Your_OUTPUT_Directory_Path:/usr/src/app/data/output" image-captioning``
+
+Upload the container to dockerhub:
+
+``bash docker/push_to_dockerhub.sh``
+
+### Contribution
+
+You are more than welcome to file issues or submit pull requrests to this repository.
+
+**Developers:**
+
+Please contact Axel Stebner (`axel.stebner(at)student.hpi.uni-potsdam.de`) or Sebastian Schmidl (`sebastian.schmidl(at)student.hpi.uni-potsdam.de`) for any questions.
+
+- [jmakr0](https://github.com/jmakr0)
+- Alexander Preuß [alpreu](https://github.com/alpreu)
+- Sebastian Schmidl [CodeLionX](https://github.com/CodeLionX)
+- Friedrich Schöne [friedrichschoene](https://github.com/friedrichschoene)
+- Axel Stebner [xasetl](https://github.com/xasetl)
+- [slin96](https://github.com/slin96)
+
+
 ## Known Problems
 
 - If you want to use METEOR scores, the whole repo must be located in a path without spaces.
@@ -116,3 +145,6 @@ For this to work, you must have installed `pydot` and [Graphviz](https://www.gra
   This can only be avoided by not using any space or other special characters in the file path to the JAR file of the scorer.
 
 - METEOR scoring currently does not work, because of subprocess communication issues with the Java code.
+
+- Training and Prediction with multiple GPUs does not work, because of issues with Keras' `multi_gpu_model` and our usage of `Reshape`-Layers.
+  See [#42](https://github.com/jmakr0/DL-Image-Captioning/issues/42) for more details.
