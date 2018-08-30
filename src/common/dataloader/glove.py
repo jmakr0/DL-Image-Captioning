@@ -142,3 +142,6 @@ class Glove:
         dists = np.dot(self.vectors_norm, unit_vector)
         nearest = np.argmax(dists)
         return self.words[nearest]
+
+    def one_hot_to_word(self, one_hot_word):
+        return self.words[np.argmax(one_hot_word)]

@@ -22,6 +22,7 @@ class DataLoadingSequence(Sequence):
         self.shuffle = shuffle
         self.input_caption = input_caption
         self.use_word_indices = use_word_indices
+        self.dictionary_size = dictionary_size
 
         settings = Settings()
         self.word_embedding_size = settings.get_word_embedding_size()
@@ -76,7 +77,7 @@ class DataLoadingSequence(Sequence):
         ids = []
         images = np.zeros(shape=(bs,) + self.image_dimensions)
         captions = np.zeros(shape=(bs, self.max_caption_length, self.word_embedding_size))
-        one_hot_caption = np.zeros(shape=(bs, self.max_caption_length, self.glove.dictionary_size))
+        one_hot_caption = np.zeros(shape=(bs, self.max_caption_length, self.dictionary_size))
 
         for i, metadata in enumerate(batch):
             ids.append(metadata['id'])

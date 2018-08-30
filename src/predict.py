@@ -16,13 +16,13 @@ from src.settings.settings import Settings
 def predict(args):
     K.set_learning_phase(0)
 
-    postprocessor = Postprocessor()
+    postprocessor = Postprocessor(dictionary_size=14831, one_hot=True)
 
     print("loading model")
     model = load_model(args.model_path)
 
     print("beginning prediction on batches of size {}".format(args.batch_size))
-    test_sequence = TestSequence(args.batch_size, input_caption=True)
+    test_sequence = TestSequence(args.batch_size, input_caption=True, dictionary_size=14831)
 
     results = []
     for i in range(len(test_sequence)):
