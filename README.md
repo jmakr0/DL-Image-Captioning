@@ -121,6 +121,21 @@ Upload the container to dockerhub:
 
 ``bash docker/push_to_dockerhub.sh``
 
+### Contribution
+
+You are more than welcome to file issues or submit pull requrests to this repository.
+
+**Developers:**
+
+Please contact Axel Stebner (`axel.stebner(at)student.hpi.uni-potsdam.de`) or Sebastian Schmidl (`sebastian.schmidl(at)student.hpi.uni-potsdam.de`) for any questions.
+
+- [jmakr0](https://github.com/jmakr0)
+- Alexander Preuß [alpreu](https://github.com/alpreu)
+- Sebastian Schmidl [CodeLionX](https://github.com/CodeLionX)
+- Friedrich Schöne [friedrichschoene](https://github.com/friedrichschoene)
+- Axel Stebner [xasetl](https://github.com/xasetl)
+- [slin96](https://github.com/slin96)
+
 
 ## Known Problems
 
@@ -132,4 +147,4 @@ Upload the container to dockerhub:
 - METEOR scoring currently does not work, because of subprocess communication issues with the Java code.
 
 - Training and Prediction with multiple GPUs does not work, because of issues with Keras' `multi_gpu_model` and our usage of `Reshape`-Layers.
-  See #42 for more details.
+  See [#42](https://github.com/jmakr0/DL-Image-Captioning/issues/42) for more details.
