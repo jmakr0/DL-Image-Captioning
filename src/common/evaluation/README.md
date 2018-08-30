@@ -14,13 +14,11 @@ The original source code was ported to Python 3 and cleaned up according to PEP-
 ./
 - cocoEvalCapDemo.py (demo script)
 
-./annotation
-- captions_val2014.json (MS COCO 2014 caption validation set)
-- Visit MS COCO [download](http://mscoco.org/dataset/#download) page for more details.
-
-./results
-- captions_val2014_fakecap_results.json (an example of fake results for running demo)
-- Visit MS COCO [format](http://mscoco.org/dataset/#format) page for more details.
+./demo
+- captions_val2014.json (MS COCO 2014 caption validation set).
+  Visit MS COCO [download](http://mscoco.org/dataset/#download) page for more details.
+- captions_val2014_fakecap_results.json (an example of fake results for running demo).
+  Visit MS COCO [format](http://mscoco.org/dataset/#format) page for more details.
 
 ./pycocoevalcap: The folder where all evaluation codes are stored.
 - evals.py: The file includes COCOEavlCap class that can be used to evaluate results on COCO.
@@ -34,8 +32,7 @@ The original source code was ported to Python 3 and cleaned up according to PEP-
 
 ## Setup ##
 
-- You will first need to download the [Stanford CoreNLP 3.6.0](http://stanfordnlp.github.io/CoreNLP/index.html) code and models for use by SPICE. To do this, run:
-    ./get_stanford_models.sh
+- You will first need to download the [Stanford CoreNLP 3.6.0](http://stanfordnlp.github.io/CoreNLP/index.html) code and models for use by SPICE. To do this, run: `./get_stanford_models.sh` or use the python-wrapper in `get_stanford_models.py`. If the evaluation code is used within the [`eval.py`-script](https://github.com/jmakr0/DL-Image-Captioning/blob/master/src/eval.py) this is done automatically.
 - Note: SPICE will try to create a cache of parsed sentences in ./pycocoevalcap/spice/cache/. This dramatically speeds up repeated evaluations. The cache directory can be moved by setting 'CACHE_DIR' in ./pycocoevalcap/spice. In the same file, caching can be turned off by removing the '-cache' argument to 'spice_cmd'. 
 
 ## References ##
