@@ -130,3 +130,6 @@ Upload the container to dockerhub:
   This can only be avoided by not using any space or other special characters in the file path to the JAR file of the scorer.
 
 - METEOR scoring currently does not work, because of subprocess communication issues with the Java code.
+
+- Training and Prediction with multiple GPUs does not work, because of issues with Keras' `multi_gpu_model` and our usage of `Reshape`-Layers.
+  See #42 for more details.
