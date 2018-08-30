@@ -40,7 +40,7 @@ def common_callbacks(batch_size=64, make_dirs=True, exp_id=''):
             write_grads=False,
             write_images=False),
         CSVLogger(csv_log_file),
-        # EarlyStopping(monitor='val_loss', patience=5, mode='auto', baseline=None),
+        EarlyStopping(monitor='val_loss', patience=5, mode='auto', baseline=None),
         ModelCheckpoint(os.path.join(
             checkpoints_dir,
             "weights.{epoch:02d}-{val_loss:.4f}.h5"),
