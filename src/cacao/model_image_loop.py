@@ -6,7 +6,7 @@ import src.cacao.model_commons as C
 
 
 def image_captioning_model_image_loop(img_shape=(224, 224, 3), cnn='resnet152', embedding_dim=50, max_caption_length=15,
-                                      gpus=0, lr=1e-3, regularizer=1e-8, dropout=0.2):
+                                      gpus=0, lr=1e-3, regularizer=1e-8, dropout=0.2, dictionary_size=None):
     # Definition of CNN
     cnn_input = Input(shape=img_shape)
     cnn_output, cnn_output_len = C.image_embedding(cnn_input, cnn, img_shape)
