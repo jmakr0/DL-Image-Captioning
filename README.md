@@ -1,6 +1,16 @@
 DL-Image-Captioning
 ===================
 Project for "Competitive Problem Solving with Deep Learning" at the Hasso-Plattner Institute.
+This repository contains the Keras source code for our four different image captioning models:
+
+| Model | Keras Model Definition | Model Plot |
+| :---  | :--------------------- | :--------- |
+| Model 1 (basis model) | [src/cacao/model_raw.py](src/cacao/model_raw.py) | [Open Plot](doc/model_plots/model_raw.pdf) |
+| Model 2 (image loop) | [src/cacao/model_image_loop.py](src/cacao/model_image_loop.py) | [Open Plot](doc/model_plots/model_image_loop.pdf) |
+| Model 3 (attention) | [src/cacao/model.py](src/cacao/model.py) | [Open Plot](doc/model_plots/model_full.pdf) |
+| Model 4 (softmax classification) | [src/cacao/model_softmax.py](src/cacao/model_softmax.py) | [Open Plot](doc/model_plots/model_softmax.pdf) |
+
+We developed these model with Python 3.6.3, Keras 2.2.0 and the TensorFlow 1.8.0 backend.
 
 ## Requirements
 
@@ -24,15 +34,82 @@ pip install -r requirements.txt
 
 ## Usage
 
+You can use this project in two different ways.
+First of all there is a Docker-Image available, which can be used to make predictions.
+See the next section for details of that.
+Second, you can run the code locally and train your own model.
+This is described in the section [Use locally](#use-locally).
+
 ### Use with Docker
 
 **tbd**
 
 ### Use locally
 
+Please make sure, that you have installed all requirements on your machine.
+You can always use [virtualenv](https://virtualenv.pypa.io/en/stable/) or an virtualenv-wrapper of your choice to install all python-dependencies.
+
+If you have a GPU at hand and want to use it, please follow the [Keras installation instruction for the use with TensorFlow](https://keras.io/#installation) to setup your environment.
+Don't forget to install cuDNN as well.
+
+For the next sections we assume that all commands are run from the project's root directory.
+Every path that can be specified in script arguments must exist before running the script.
+
 #### Training
 
+If you want to train the models with your own data, you can find the `train.py` script in the `src`-folder: [train.py](src/train.py).
+It provides a help-page that can be displayed via:
+
+```
+$> python src/train.py --help
+usage: train.py [-h] [--exp_id EXP_ID] [--devices [DEVICES [DEVICES ...]]]
+                [--cnn {resnet50,resnet152}] [--epochs EPOCHS]
+                [--batch_size BATCH_SIZE] [--lr LR] [--workers WORKERS]
+                [--model_type {full,image_loop,raw,softmax}]
+                settings
+
+Starts the training of the `cacao` model
+
+positional arguments:
+  settings              filepath to the configuration file
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --exp_id EXP_ID       experiment ID for saving logs (when empty: timestamp)
+  --devices [DEVICES [DEVICES ...]]
+                        IDs of the GPUs to use, starting from 0
+  --cnn {resnet50,resnet152}
+                        type of CNN to use as image feature extractor
+  --epochs EPOCHS       trainings stops after this number of epochs
+  --batch_size BATCH_SIZE
+                        batch size as power of 2; if multiple GPUs are used
+                        the batch is divided between them
+  --lr LR               learning rate for the optimization algorithm
+  --workers WORKERS     number of worker-threads to use for data preprocessing
+                        and loading
+  --model_type {full,image_loop,raw,softmax}
+                        selects model to train with growing capabilities
+```
+
+As you can see, you are required to pass a path to a settings file.
+This file is specific to the system the code is running on and can be used to specify to path to various files and folders, including the training and validation data.
+In addition it contains information about the images and the word embedding.
+See [settings.yml](src/settings/settings.yml) for an settings file example.
+
+> Attention!
+>
+> Currently our models are not compatible with keras' multi-GPU (`multi_gpu_model`) support.
+> This means, you can use the `--devices`-switch only with one GPU ID, subsequent IDs will be trimmed.
+
 #### Prediction
+
+Prediction is implemented in the [`predict.py`-script](src/predict.py).
+It also supports the `--help`-switch and requires you to pass three paths: to the model-file, to the output-file and to the settings-file.
+Please make sure, you specify the correct model type with `--model_type {full,image_loop,raw,softmax}`, so the pre- and postprocessing is correct for the used model.
+The prediction results are written into the specified output-file in Json format (`[{"image_id": 0, "caption": "text"}, ...]`).
+
+You can use `declare +gx CUDA_VISIBLE_DEVICES=0; python src/predict.py <params>` to specify the GPU that should be used for prediction.
+If `CUDA_VISIBLE_DEVICES` is not specified, tensorflow will allocate all available memory across all installed GPUs.
 
 #### Evaluation
 
