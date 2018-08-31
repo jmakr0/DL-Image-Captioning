@@ -1,26 +1,24 @@
-import sys
-
 import numpy as np
-from scipy import spatial
+from keras.utils import to_categorical
 
 from src.common.dataloader import matutils
 from src.settings.settings import Settings
 
 
 class Glove:
-    def __init__(self, dictionary_size=400000):
-        self.dictionary_size = dictionary_size
-
+    def __init__(self):
         settings = Settings()
+        self.dictionary_size = settings.get_dictionary_size()
         self.embedding_path = settings.get_glove_embedding()
         self.word_embedding_size = settings.get_word_embedding_size()
         self.max_caption_length = settings.get_max_caption_length()
         self.stop_word = settings.get_stop_word()
 
         self.word_numbers = {}
-        self.embedding_vectors = np.zeros((dictionary_size, self.word_embedding_size))
+        self.embedding_vectors = np.zeros((self.dictionary_size, self.word_embedding_size))
         self.words = {}
         self.stop_word_vector = None
+        self.one_hot_stop_word_vector = None
         self.vectors_norm = None
 
     def load_embedding(self):
@@ -38,6 +36,8 @@ class Glove:
                     break
 
         self.stop_word_vector = self.get_word_vector(self.stop_word)
+        self.one_hot_stop_word_vector = to_categorical(self.get_word_number(self.stop_word),
+                                                       num_classes=self.dictionary_size)
 
         self.vectors_norm = None
 
@@ -80,6 +80,12 @@ class Glove:
             vector.append(self.get_word_number(word))
 
         return vector
+
+    def one_hot_vector(self, string):
+        index_sequence = self.text_to_word_indices(string, limit=self.max_caption_length)
+        fix_len_indices = np.tile(self.one_hot_stop_word_vector, (self.max_caption_length, 1))
+        fix_len_indices[:len(index_sequence)] = to_categorical(index_sequence, num_classes=self.dictionary_size)
+        return fix_len_indices
 
     def embed_text(self, string):
         index_sequence = self.text_to_word_indices(string, limit=self.max_caption_length)
@@ -132,3 +138,6 @@ class Glove:
         dists = np.dot(self.vectors_norm, unit_vector)
         nearest = np.argmax(dists)
         return self.words[nearest]
+
+    def one_hot_to_word(self, one_hot_word):
+        return self.words[np.argmax(one_hot_word)]

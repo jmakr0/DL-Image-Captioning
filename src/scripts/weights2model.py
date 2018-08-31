@@ -4,16 +4,27 @@ from argparse import ArgumentParser
 
 from src.cacao.model import image_captioning_model
 from src.settings.settings import Settings
+from src.cacao.model_image_loop import image_captioning_model_image_loop
+from src.cacao.model_raw import image_captioning_model_raw
+from src.cacao.model_softmax import image_captioning_model_softmax
 
 from keras import backend as K
 
 
-def main(weights_file, model_file, cnn, save_plot):
+type_switcher = {
+    'full': image_captioning_model,
+    'image_loop': image_captioning_model_image_loop,
+    'raw': image_captioning_model_raw,
+    'softmax': image_captioning_model_softmax
+}
+
+
+def main(weights_file, model_file, model_type, cnn, save_plot):
     config = Settings()
 
     print("loading `cacao` model weights from file {}".format(weights_file))
     K.set_learning_phase(1)
-    model = image_captioning_model(
+    model, _ = type_switcher.get(model_type)(
         lr=1e-3,
         cnn=cnn,
         gpus=1,
@@ -44,6 +55,10 @@ if __name__ == "__main__":
                            default='resnet50',
                            choices=['resnet50', 'resnet152'],
                            help="cnn used in the model that produced the weights file, default = `resnet50`")
+    arg_parse.add_argument('--model_type',
+                           type=str,
+                           default='full', choices=type_switcher.keys(),
+                           help="selects model to train with growing capabilities")
     arg_parse.add_argument('input',
                            type=str,
                            help="filepath to the weights file")
@@ -56,7 +71,7 @@ if __name__ == "__main__":
     args = arg_parse.parse_args()
 
     if not os.path.isfile(args.settings):
-        raise FileNotFoundError('Settings under {} do not exist.'.format(arguments.settings))
+        raise FileNotFoundError('Settings under {} do not exist.'.format(args.settings))
     Settings.FILE = args.settings
 
-    main(args.input, args.output, args.cnn, args.plot)
+    main(args.input, args.output, args.model_type, args.cnn, args.plot)

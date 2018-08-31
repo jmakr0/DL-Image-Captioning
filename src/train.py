@@ -2,12 +2,12 @@ import argparse
 from datetime import datetime
 import sys; import os; sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
-import numpy as np
 from keras import backend as K
 
 from src.cacao.model import image_captioning_model
 from src.cacao.model_image_loop import image_captioning_model_image_loop
 from src.cacao.model_raw import image_captioning_model_raw
+from src.cacao.model_softmax import image_captioning_model_softmax
 from src.common.callbacks import common_callbacks
 from src.common.dataloader.dataloader import TrainSequence, ValSequence
 from src.settings.settings import Settings
@@ -15,24 +15,27 @@ from src.settings.settings import Settings
 type_switcher = {
     'full': image_captioning_model,
     'image_loop': image_captioning_model_image_loop,
-    'raw': image_captioning_model_raw
+    'raw': image_captioning_model_raw,
+    'softmax': image_captioning_model_softmax
 }
 
 
 def train(args):
     K.set_learning_phase(1)
 
-    train_sequence = TrainSequence(args.batch_size, input_caption=True)
-    val_sequence = ValSequence(args.batch_size, input_caption=True)
-
     config = Settings()
+    _use_indices = True if args.model_type == 'softmax' else False
+    train_sequence = TrainSequence(args.batch_size, input_caption=True, use_word_indices=_use_indices)
+    val_sequence = ValSequence(args.batch_size, input_caption=True, use_word_indices=_use_indices)
     callbacks = common_callbacks(batch_size=args.batch_size, exp_id=args.exp_id)
     os.environ['CUDA_VISIBLE_DEVICES'] = ', '.join(map(str, args.devices))
 
-    original_model, multigpu_model = type_switcher.get(args.model_type)(lr=args.lr, cnn=args.cnn, gpus=len(args.devices),
-                                               img_shape=config.get_image_dimensions(),
-                                               embedding_dim=config.get_word_embedding_size(),
-                                               max_caption_length=config.get_max_caption_length())
+    original_model, multigpu_model = type_switcher.get(args.model_type)(
+        lr=args.lr, cnn=args.cnn, gpus=len(args.devices),
+        img_shape=config.get_image_dimensions(),
+        embedding_dim=config.get_word_embedding_size(),
+        max_caption_length=config.get_max_caption_length(),
+        dictionary_size=config.get_dictionary_size())
     if multigpu_model:
         model = multigpu_model
     else:
