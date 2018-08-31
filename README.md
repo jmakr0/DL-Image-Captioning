@@ -15,8 +15,6 @@ We developed these model with Python 3.6.3, Keras 2.2.0 and the TensorFlow 1.8.0
 ## Requirements
 
 These are the requirements for local usage and development.
-You can also use a Docker image to make predictions.
-See section [Use with Docker](#use-with-docker) below.
 
 **OS-level requirements**
 
@@ -35,14 +33,7 @@ pip install -r requirements.txt
 ## Usage
 
 You can use this project in two different ways.
-First of all there is a Docker-Image available, which can be used to make predictions.
-See the next section for details of that.
-Second, you can run the code locally and train your own model.
-This is described in the section [Use locally](#use-locally).
-
-### Use with Docker
-
-**tbd**
+You can run the code locally and train your own model which is described in the section [Use locally](#use-locally).
 
 ### Use locally
 
@@ -184,20 +175,6 @@ For this to work, you must have installed `pydot` and [Graphviz](https://www.gra
 
 ## Development
 
-### Docker
-
-Build the image locally:
-
-``docker build -f docker/Dockerfile . --tag image-captioning``
-
-Run the container:
-
-``docker run --rm -v "Your_INPUT_Directory_Path:/usr/src/app/data/input" -v "Your_OUTPUT_Directory_Path:/usr/src/app/data/output" image-captioning``
-
-Upload the container to dockerhub:
-
-``bash docker/push_to_dockerhub.sh``
-
 ### Contribution
 
 You are more than welcome to file issues or submit pull requrests to this repository.
@@ -206,12 +183,12 @@ You are more than welcome to file issues or submit pull requrests to this reposi
 
 Please contact Axel Stebner (`axel.stebner(at)student.hpi.uni-potsdam.de`) or Sebastian Schmidl (`sebastian.schmidl(at)student.hpi.uni-potsdam.de`) for any questions.
 
-- [jmakr0](https://github.com/jmakr0)
+- Maximilian Kroschewski [jmakr0](https://github.com/jmakr0)
 - Alexander Preuß [alpreu](https://github.com/alpreu)
 - Sebastian Schmidl [CodeLionX](https://github.com/CodeLionX)
 - Friedrich Schöne [friedrichschoene](https://github.com/friedrichschoene)
 - Axel Stebner [xasetl](https://github.com/xasetl)
-- [slin96](https://github.com/slin96)
+- Nils Straßenburg [slin96](https://github.com/slin96)
 
 
 ## Known Problems
