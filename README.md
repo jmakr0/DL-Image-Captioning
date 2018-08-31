@@ -5,7 +5,7 @@ This repository contains the Keras source code for our four different image capt
 
 | Model | Keras Model Definition | Model Plot |
 | :---  | :--------------------- | :--------- |
-| Model 1 (basis model) | [src/cacao/model_raw.py](src/cacao/model_raw.py) | [Open Plot](doc/model_plots/model_raw.pdf) |
+| Model 1 (base model) | [src/cacao/model_raw.py](src/cacao/model_raw.py) | [Open Plot](doc/model_plots/model_raw.pdf) |
 | Model 2 (image loop) | [src/cacao/model_image_loop.py](src/cacao/model_image_loop.py) | [Open Plot](doc/model_plots/model_image_loop.pdf) |
 | Model 3 (attention) | [src/cacao/model.py](src/cacao/model.py) | [Open Plot](doc/model_plots/model_full.pdf) |
 | Model 4 (softmax classification) | [src/cacao/model_softmax.py](src/cacao/model_softmax.py) | [Open Plot](doc/model_plots/model_softmax.pdf) |
